@@ -176,3 +176,26 @@ For each branch or PR step, activate only the smallest relevant set of skills.
 - Import pipeline branch: api-and-interface-design, source-driven-development, test-driven-development
 - Bugfix branch: debugging-and-error-recovery, browser-testing-with-devtools
 - PR preparation branch or final review pass: code-review-and-quality, git-workflow-and-versioning
+
+## Code review with subagent pattern
+
+For significant changes, use a dedicated `code-reviewer` subagent as an independent review gate:
+
+1. Use the `code-review-and-quality` skill for the review.
+2. Inside that skill, dispatch a fresh `code-reviewer` subagent:
+   - Give it read-only access (Read, Grep, Glob, Bash).
+   - Do not allow modifications during review.
+3. Ask the subagent to check for:
+   - security issues
+   - missing edge cases
+   - error handling
+   - test coverage
+   - unnecessary complexity
+   - overall code quality and consistency
+4. Review findings and fix at least:
+   - all Critical items
+   - all Major items
+5. Only after those are addressed:
+   - commit any follow-up changes to the same branch
+   - push
+   - mark the PR as ready for re-review
