@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 export function MarketingHeader() {
   return (
@@ -8,7 +8,9 @@ export function MarketingHeader() {
         <Link href="/" className="text-sm font-semibold tracking-tight">
           Flowlaps
         </Link>
-        <Button size="sm" render={<Link href="#waitlist">Join the waitlist</Link>} />
+        <Link href="#waitlist" className={buttonVariants({ size: "sm" })}>
+          Join the waitlist
+        </Link>
       </div>
     </header>
   );

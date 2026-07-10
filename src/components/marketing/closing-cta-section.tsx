@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { SectionHeading } from "@/components/marketing/section-heading";
 
 export function ClosingCtaSection() {
@@ -11,11 +11,12 @@ export function ClosingCtaSection() {
           description="That's the whole idea. Join the waitlist to be first in."
           align="center"
         />
-        <Button
-          size="lg"
-          className="mt-2"
-          render={<Link href="#waitlist">Join the waitlist</Link>}
-        />
+        <Link
+          href="#waitlist"
+          className={buttonVariants({ size: "lg", className: "mt-2" })}
+        >
+          Join the waitlist
+        </Link>
       </div>
     </section>
   );

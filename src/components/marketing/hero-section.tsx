@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 export function HeroSection() {
   return (
@@ -24,12 +24,15 @@ export function HeroSection() {
           session.
         </p>
         <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row">
-          <Button size="lg" render={<Link href="#waitlist">Join the waitlist</Link>} />
-          <Button
-            variant="ghost"
-            size="lg"
-            render={<Link href="#how-it-works">See how it works</Link>}
-          />
+          <Link href="#waitlist" className={buttonVariants({ size: "lg" })}>
+            Join the waitlist
+          </Link>
+          <Link
+            href="#how-it-works"
+            className={buttonVariants({ variant: "ghost", size: "lg" })}
+          >
+            See how it works
+          </Link>
         </div>
       </div>
     </section>
