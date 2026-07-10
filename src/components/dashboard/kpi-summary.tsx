@@ -9,8 +9,9 @@ interface KpiSummaryProps {
 }
 
 export function KpiSummary({ sessions, latestReport }: KpiSummaryProps) {
-  const bestSession = sessions.reduce((best, session) =>
-    session.bestLapMs < best.bestLapMs ? session : best,
+  const bestSession = sessions.reduce(
+    (best, session) => (session.bestLapMs < best.bestLapMs ? session : best),
+    sessions[0],
   );
   const avgConsistencyMs =
     sessions.reduce((sum, session) => sum + session.consistencyDeltaMs, 0) /

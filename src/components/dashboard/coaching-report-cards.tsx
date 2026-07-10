@@ -42,11 +42,19 @@ export function CoachingReportCards({
                 <CardContent className="flex flex-col gap-3">
                   <p className="text-sm text-muted-foreground">{report.summary}</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {report.focusAreas.map((area) => (
-                      <Badge key={area} variant="outline">
+                    {report.focusAreas.map((area, index) => (
+                      <Badge key={`${report.id}-${index}`} variant="outline">
                         {area}
                       </Badge>
                     ))}
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium">Next practice</p>
+                    <ul className="mt-1 list-disc pl-4 text-sm text-muted-foreground">
+                      {report.practicePlan.map((step, index) => (
+                        <li key={`${report.id}-plan-${index}`}>{step}</li>
+                      ))}
+                    </ul>
                   </div>
                 </CardContent>
               </Card>

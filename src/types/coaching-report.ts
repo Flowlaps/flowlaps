@@ -4,4 +4,5 @@ export interface CoachingReportSummary {
   createdAt: string;
   summary: string;
   focusAreas: string[];
+  practicePlan: string[];
 }

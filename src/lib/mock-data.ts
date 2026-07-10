@@ -59,6 +59,10 @@ export const mockCoachingReports: CoachingReportSummary[] = [
       "Delay braking into Les Combes and Bus Stop",
       "Smooth throttle pickup on exit of Pouhon",
     ],
+    practicePlan: [
+      "Run 5 laps focused only on braking point at Les Combes",
+      "Note how each lap feels rather than chasing lap time",
+    ],
   },
   {
     id: "report-2",
@@ -69,6 +73,10 @@ export const mockCoachingReports: CoachingReportSummary[] = [
     focusAreas: [
       "Hold consistent brake pressure through Copse",
       "Commit to throttle earlier at Stowe exit",
+    ],
+    practicePlan: [
+      "Do a short run of 6 to 8 laps and stop before fatigue sets in",
+      "Compare your first 3 laps against your last 3 for pace drop-off",
     ],
   },
   {
@@ -81,6 +89,10 @@ export const mockCoachingReports: CoachingReportSummary[] = [
       "Commit to throttle earlier out of the Castrol S",
       "Trust front grip through the Karussell",
       "Stay consistent across the final sector",
+    ],
+    practicePlan: [
+      "Pick one slow corner and work only on throttle timing there",
+      "Run a few laps focused purely on a consistent final sector",
     ],
   },
 ];
