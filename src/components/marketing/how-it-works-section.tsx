@@ -21,16 +21,13 @@ const steps = [
 
 export function HowItWorksSection() {
   return (
-    <section
-      id="how-it-works"
-      className="border-t border-border bg-muted/30 scroll-mt-16"
-    >
-      <div className="mx-auto w-full max-w-5xl px-6 py-16 sm:py-20">
+    <section id="how-it-works" className="scroll-mt-16">
+      <div className="mx-auto w-full max-w-5xl px-6 py-14 sm:py-16">
         <SectionHeading eyebrow="How it works" title="Three steps. After every session." />
         <div className="mt-10 grid gap-8 sm:grid-cols-3">
           {steps.map((item) => (
-            <div key={item.step} className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
+            <div key={item.step} className="flex flex-col gap-3">
+              <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
                 {item.step}
               </span>
               <h3 className="font-medium">{item.title}</h3>

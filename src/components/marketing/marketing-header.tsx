@@ -5,7 +5,7 @@ export function MarketingHeader() {
   return (
     <header className="border-b border-border">
       <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-6">
-        <Link href="/" className="text-sm font-semibold tracking-tight">
+        <Link href="/" className="text-lg font-semibold tracking-tight">
           Flowlaps
         </Link>
         <Link href="#waitlist" className={buttonVariants({ size: "sm" })}>

@@ -8,7 +8,7 @@ export function HeroSection() {
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-32 -z-10 flex justify-center"
       >
-        <div className="h-72 w-xl rounded-full bg-primary/10 blur-3xl" />
+        <div className="h-72 w-xl rounded-full bg-primary/20 blur-3xl" />
       </div>
 
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-6 py-24 text-center sm:py-32">

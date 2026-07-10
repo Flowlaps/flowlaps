@@ -18,7 +18,7 @@ const principles = [
 
 export function DifferentiationSection() {
   return (
-    <section className="mx-auto w-full max-w-5xl px-6 py-16 sm:py-20">
+    <section className="mx-auto w-full max-w-5xl px-6 py-14 sm:py-16">
       <SectionHeading
         eyebrow="Why Flowlaps"
         title="Built to feel like a coach, not a parser."
@@ -29,7 +29,7 @@ export function DifferentiationSection() {
         {principles.map((principle) => (
           <div
             key={principle.title}
-            className="flex flex-col gap-2 rounded-xl border border-border p-6"
+            className="flex flex-col gap-2 rounded-xl border border-primary/15 p-6"
           >
             <h3 className="font-medium">{principle.title}</h3>
             <p className="text-sm text-muted-foreground">
