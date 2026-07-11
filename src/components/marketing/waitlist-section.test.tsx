@@ -1,6 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { WaitlistSection } from "./waitlist-section";
+
+// WaitlistSection renders WaitlistForm, which calls the joinWaitlist server
+// action. Mock it so this test doesn't depend on a live database connection.
+vi.mock("@/app/actions/waitlist", () => ({
+  joinWaitlist: vi.fn(),
+}));
 
 describe("WaitlistSection", () => {
   it("exposes the #waitlist anchor target", () => {

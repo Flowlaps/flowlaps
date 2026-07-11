@@ -1,45 +1,27 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { joinWaitlist, type WaitlistState } from "@/app/actions/waitlist";
 
-type Status = "idle" | "loading" | "success" | "error";
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const initialState: WaitlistState = { status: "idle" };
 
 export function WaitlistForm() {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<Status>("idle");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [state, formAction, isPending] = useActionState(
+    joinWaitlist,
+    initialState,
+  );
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!EMAIL_PATTERN.test(email)) {
-      setStatus("error");
-      setErrorMessage("Enter a valid email address.");
-      return;
-    }
-
-    setStatus("loading");
-
-    // Mock submit: no waitlist backend yet, this just simulates the request.
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    setStatus("success");
-  }
-
-  if (status === "success") {
+  if (state.status === "success") {
     return (
       <div
         role="status"
         aria-live="polite"
         className="rounded-xl border border-border bg-card p-6 text-center"
       >
-        <p className="font-medium">You&apos;re on the list.</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          We&apos;ll email you when Flowlaps is ready to try.
+        <p className="font-medium">
+          You&apos;re on the list. We&apos;ll be in touch.
         </p>
       </div>
     );
@@ -47,7 +29,7 @@ export function WaitlistForm() {
 
   return (
     <form
-      onSubmit={handleSubmit}
+      action={formAction}
       noValidate
       className="flex flex-col gap-3 sm:flex-row sm:items-start"
     >
@@ -56,34 +38,36 @@ export function WaitlistForm() {
           Email address
         </label>
         <Input
+          // React resets uncontrolled form fields when a form action starts,
+          // which would otherwise blank the input the moment an error
+          // appears. Re-keying on the last submitted value forces a fresh
+          // mount with that value as defaultValue, so what the user typed
+          // stays visible next to the error message.
+          key={state.status === "error" ? state.email : "idle"}
           id="waitlist-email"
           name="email"
           type="email"
           placeholder="you@example.com"
           autoComplete="email"
-          value={email}
-          onChange={(event) => {
-            setEmail(event.target.value);
-            if (status === "error") {
-              setStatus("idle");
-            }
-          }}
-          aria-invalid={status === "error"}
-          aria-describedby={status === "error" ? "waitlist-email-error" : undefined}
+          defaultValue={state.status === "error" ? state.email : undefined}
+          aria-invalid={state.status === "error"}
+          aria-describedby={
+            state.status === "error" ? "waitlist-email-error" : undefined
+          }
           className="h-10"
         />
-        {status === "error" ? (
+        {state.status === "error" ? (
           <p
             id="waitlist-email-error"
             role="alert"
             className="mt-2 text-sm text-destructive"
           >
-            {errorMessage}
+            {state.message}
           </p>
         ) : null}
       </div>
-      <Button type="submit" size="lg" disabled={status === "loading"}>
-        {status === "loading" ? "Joining…" : "Join the waitlist"}
+      <Button type="submit" size="lg" disabled={isPending}>
+        {isPending ? "Joining…" : "Join the waitlist"}
       </Button>
     </form>
   );
