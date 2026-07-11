@@ -117,6 +117,37 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/*
+ * "Night session" theme: scoped to the public marketing pages only (see
+ * (marketing)/layout.tsx), not the dashboard. Reuses Tailwind's built-in
+ * zinc/orange palette so values here match literal zinc-950/900/800/100/400
+ * and orange-600 utilities exactly. --input is deliberately lighter than
+ * --border (zinc-600 vs zinc-800): a zinc-800 form field border is close to
+ * invisible against a zinc-950 page (contrast ~1.2:1), so form fields need a
+ * brighter step to stay usable, matching the reasoning already applied to
+ * the light theme's --input token above.
+ */
+.theme-night {
+  --background: var(--color-zinc-950);
+  --foreground: var(--color-zinc-100);
+  --card: var(--color-zinc-900);
+  --card-foreground: var(--color-zinc-100);
+  --popover: var(--color-zinc-900);
+  --popover-foreground: var(--color-zinc-100);
+  --primary: var(--color-orange-600);
+  --primary-foreground: var(--color-zinc-950);
+  --secondary: var(--color-zinc-800);
+  --secondary-foreground: var(--color-zinc-100);
+  --muted: var(--color-zinc-900);
+  --muted-foreground: var(--color-zinc-400);
+  --accent: var(--color-zinc-800);
+  --accent-foreground: var(--color-zinc-100);
+  --destructive: var(--color-red-400);
+  --border: var(--color-zinc-800);
+  --input: var(--color-zinc-600);
+  --ring: var(--color-orange-600);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

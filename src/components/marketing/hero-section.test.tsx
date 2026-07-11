@@ -23,4 +23,11 @@ describe("HeroSection", () => {
       screen.getByRole("link", { name: "See how it works" }),
     ).toHaveAttribute("href", "#how-it-works");
   });
+
+  it("hides the decorative racing-line background from assistive tech", () => {
+    const { container } = render(<HeroSection />);
+    const svg = container.querySelector("svg");
+    expect(svg).toHaveAttribute("aria-hidden");
+    expect(svg).toHaveClass("pointer-events-none");
+  });
 });
