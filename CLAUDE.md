@@ -93,9 +93,8 @@ Use this workflow for every meaningful implementation step:
 4. Review the diff for unnecessary noise.
 5. Add and commit with a clear message.
 6. Push the branch to the remote.
-7. Open a pull request.
-8. Deploy to preview env using `vercel` command.
-9. Stop and wait for review feedback before continuing.
+7. Open a pull request. Vercel's GitHub integration deploys a preview automatically on every push to the PR — no manual deploy step needed.
+8. Stop and wait for review feedback before continuing.
 
 ## Collaboration loop
 
