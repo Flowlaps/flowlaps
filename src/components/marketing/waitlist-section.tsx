@@ -4,7 +4,7 @@ import { WaitlistForm } from "@/components/marketing/waitlist-form";
 export function WaitlistSection() {
   return (
     <section id="waitlist" className="bg-primary/10 scroll-mt-16">
-      <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-6 py-16 text-center sm:py-20">
+      <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-6 py-24 text-center sm:py-32">
         <SectionHeading
           eyebrow="Get early access"
           title="Be first in when Flowlaps opens up."

@@ -25,4 +25,13 @@ describe("SessionReportCard", () => {
     const text = document.body.textContent ?? "";
     expect(text).not.toMatch(/\d+\s*m\b|board|%/i);
   });
+
+  it("has a visible border and shadow so it lifts off the dark background", () => {
+    render(<SessionReportCard />);
+    const card = screen.getByText("Session Insights — Monza").closest(
+      '[data-slot="card"]',
+    );
+    expect(card).toHaveClass("border");
+    expect(card).toHaveClass("shadow-2xl");
+  });
 });

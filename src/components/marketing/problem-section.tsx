@@ -21,7 +21,7 @@ const problems = [
 export function ProblemSection() {
   return (
     <section className="bg-primary/5">
-      <div className="mx-auto w-full max-w-5xl px-6 py-14 sm:py-16">
+      <div className="mx-auto w-full max-w-5xl px-6 py-20 sm:py-28">
         <SectionHeading
           title="Most coaching tools weren't built for after the session."
           className="max-w-2xl"

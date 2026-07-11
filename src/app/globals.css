@@ -122,10 +122,13 @@
  * (marketing)/layout.tsx), not the dashboard. Reuses Tailwind's built-in
  * zinc/orange palette so values here match literal zinc-950/900/800/100/400
  * and orange-600 utilities exactly. --input is deliberately lighter than
- * --border (zinc-600 vs zinc-800): a zinc-800 form field border is close to
+ * --border (zinc-500 vs zinc-800): a zinc-800 form field border is close to
  * invisible against a zinc-950 page (contrast ~1.2:1), so form fields need a
  * brighter step to stay usable, matching the reasoning already applied to
- * the light theme's --input token above.
+ * the light theme's --input token above. zinc-500 (not zinc-600) because
+ * form fields can sit on tinted section backgrounds (e.g. bg-primary/10),
+ * not just the flat page background, and zinc-600 only clears ~2.4:1 there
+ * versus zinc-500's ~3.8:1 against the same tinted background.
  */
 .theme-night {
   --background: var(--color-zinc-950);
@@ -144,7 +147,7 @@
   --accent-foreground: var(--color-zinc-100);
   --destructive: var(--color-red-400);
   --border: var(--color-zinc-800);
-  --input: var(--color-zinc-600);
+  --input: var(--color-zinc-500);
   --ring: var(--color-orange-600);
 }
 

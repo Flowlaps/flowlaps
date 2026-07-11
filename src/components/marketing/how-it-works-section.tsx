@@ -22,7 +22,7 @@ const steps = [
 export function HowItWorksSection() {
   return (
     <section id="how-it-works" className="scroll-mt-16">
-      <div className="mx-auto w-full max-w-5xl px-6 py-14 sm:py-16">
+      <div className="mx-auto w-full max-w-5xl px-6 py-20 sm:py-28">
         <SectionHeading eyebrow="How it works" title="Three steps. After every session." />
         <div className="mt-10 grid gap-8 sm:grid-cols-3">
           {steps.map((item) => (

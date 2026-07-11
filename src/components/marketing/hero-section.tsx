@@ -15,20 +15,19 @@ export function HeroSection() {
         aria-hidden
         viewBox="0 0 800 400"
         preserveAspectRatio="xMidYMid slice"
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full text-primary/25"
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full text-primary/10"
       >
         <path
-          d="M -50 380 C 150 380, 220 40, 400 40 S 650 380, 850 380"
+          d="M -50 320 C 90 300, 150 130, 300 95 C 420 68, 470 150, 610 165 C 710 175, 780 130, 900 85"
           fill="none"
           stroke="currentColor"
-          strokeWidth="6"
+          strokeWidth="2"
           strokeLinecap="round"
-          strokeDasharray="14 14"
         />
-        <circle cx="400" cy="40" r="7" fill="currentColor" />
+        <circle cx="300" cy="95" r="3" fill="currentColor" />
       </svg>
 
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-6 py-24 text-center sm:py-32">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-6 py-28 text-center sm:py-36">
         <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">
           Stay in the flow.
         </h1>

@@ -3,7 +3,7 @@ import { SessionReportCard } from "@/components/marketing/session-report-card";
 
 export function ReportPreviewSection() {
   return (
-    <section className="mx-auto w-full max-w-5xl px-6 py-14 sm:py-16">
+    <section className="mx-auto w-full max-w-5xl px-6 py-20 sm:py-28">
       <SectionHeading
         eyebrow="What you get"
         title="One habit. One clear next step."
