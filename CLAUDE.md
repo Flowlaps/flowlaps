@@ -94,7 +94,8 @@ Use this workflow for every meaningful implementation step:
 5. Add and commit with a clear message.
 6. Push the branch to the remote.
 7. Open a pull request.
-8. Stop and wait for review feedback before continuing.
+8. Deploy to preview env using `vercel` command.
+9. Stop and wait for review feedback before continuing.
 
 ## Collaboration loop
 
