@@ -4,6 +4,7 @@ import { z } from "zod";
 import { headers } from "next/headers";
 import { track } from "@vercel/analytics/server";
 import { prisma } from "@/lib/prisma";
+import { WAITLIST_SIGNUP_EVENT } from "@/lib/analytics";
 
 export type WaitlistState =
   | { status: "idle" }
@@ -16,8 +17,6 @@ const waitlistSchema = z.object({
 
 const INVALID_EMAIL_MESSAGE = "Please enter a valid email address.";
 const UNEXPECTED_ERROR_MESSAGE = "Something went wrong. Please try again.";
-
-export const WAITLIST_SIGNUP_EVENT = "Waitlist Signup";
 
 export async function joinWaitlist(
   _prevState: WaitlistState,

@@ -1,7 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { joinWaitlist, WAITLIST_SIGNUP_EVENT } from "./waitlist";
+import { joinWaitlist } from "./waitlist";
 import { prisma } from "@/lib/prisma";
 import { track } from "@vercel/analytics/server";
+import { WAITLIST_SIGNUP_EVENT } from "@/lib/analytics";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
