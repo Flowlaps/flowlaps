@@ -1,6 +1,8 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
+import { track } from "@vercel/analytics/server";
 import { prisma } from "@/lib/prisma";
 
 export type WaitlistState =
@@ -49,6 +51,8 @@ export async function joinWaitlist(
       email: submittedEmail,
     };
   }
+
+  await track("Waitlist Signup", undefined, { headers: await headers() });
 
   return { status: "success" };
 }
