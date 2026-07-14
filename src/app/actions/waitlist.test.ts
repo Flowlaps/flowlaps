@@ -1,6 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { joinWaitlist } from "./waitlist";
 import { prisma } from "@/lib/prisma";
+import { track } from "@vercel/analytics/server";
+import { WAITLIST_SIGNUP_EVENT } from "@/lib/analytics";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -10,10 +12,21 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+vi.mock("next/headers", () => ({
+  headers: vi.fn().mockResolvedValue(new Headers()),
+}));
+
+vi.mock("@vercel/analytics/server", () => ({
+  track: vi.fn().mockResolvedValue(undefined),
+}));
+
 const mockedUpsert = vi.mocked(prisma.waitlist.upsert);
+const mockedTrack = vi.mocked(track);
 
 beforeEach(() => {
   mockedUpsert.mockReset();
+  mockedTrack.mockReset();
+  mockedTrack.mockResolvedValue(undefined);
 });
 
 function formDataWith(email: string | undefined) {
@@ -37,6 +50,7 @@ describe("joinWaitlist", () => {
       email: "not-an-email",
     });
     expect(mockedUpsert).not.toHaveBeenCalled();
+    expect(mockedTrack).not.toHaveBeenCalled();
   });
 
   it("rejects a missing email field", async () => {
@@ -64,6 +78,11 @@ describe("joinWaitlist", () => {
       update: {},
     });
     expect(result).toEqual({ status: "success" });
+    expect(mockedTrack).toHaveBeenCalledWith(
+      WAITLIST_SIGNUP_EVENT,
+      undefined,
+      expect.objectContaining({ headers: expect.any(Headers) }),
+    );
   });
 
   it("returns success for a duplicate email, indistinguishable from a new signup", async () => {
@@ -82,6 +101,7 @@ describe("joinWaitlist", () => {
     );
 
     expect(result).toEqual({ status: "success" });
+    expect(mockedTrack).toHaveBeenCalledTimes(1);
   });
 
   it("maps an unexpected database error to a calm generic message and logs it", async () => {
@@ -101,6 +121,7 @@ describe("joinWaitlist", () => {
       email: "driver@example.com",
     });
     expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(mockedTrack).not.toHaveBeenCalled();
 
     consoleErrorSpy.mockRestore();
   });

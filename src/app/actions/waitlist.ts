@@ -1,7 +1,10 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
+import { track } from "@vercel/analytics/server";
 import { prisma } from "@/lib/prisma";
+import { WAITLIST_SIGNUP_EVENT } from "@/lib/analytics";
 
 export type WaitlistState =
   | { status: "idle" }
@@ -49,6 +52,10 @@ export async function joinWaitlist(
       email: submittedEmail,
     };
   }
+
+  // Fire-and-forget: track() swallows its own errors and, on Vercel, defers
+  // the request via waitUntil, so it must never block or fail the response.
+  void track(WAITLIST_SIGNUP_EVENT, undefined, { headers: await headers() });
 
   return { status: "success" };
 }
