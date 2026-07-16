@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteHeader } from "@/components/site-header";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
@@ -9,23 +10,18 @@ const navItems = [
 
 export function SiteNav() {
   return (
-    <header className="border-b border-border">
-      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-6">
-        <Link href="/dashboard" className="text-sm font-semibold tracking-tight">
-          Flowlaps
-        </Link>
-        <nav className="flex items-center gap-6">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-    </header>
+    <SiteHeader logoHref="/dashboard">
+      <nav className="flex items-center gap-6">
+        {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+    </SiteHeader>
   );
 }
