@@ -6,6 +6,7 @@ empty_tree="4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 remote_name="$1"
 
 changed_files=""
+diff_error=0
 
 while read -r local_ref local_sha remote_ref remote_sha; do
 	[ -z "$local_sha" ] && continue
@@ -33,15 +34,44 @@ while read -r local_ref local_sha remote_ref remote_sha; do
 		range="$remote_sha..$local_sha"
 	fi
 
-	files=$(git diff --name-only "$range" -- '*.ts' '*.tsx' '*.js' '*.jsx' 2>/dev/null || true)
-	if [ -n "$files" ]; then
-		changed_files="$changed_files
+	if files=$(git diff --name-only "$range" -- '*.ts' '*.tsx' '*.js' '*.jsx' 2>&1); then
+		if [ -n "$files" ]; then
+			changed_files="$changed_files
 $files"
+		fi
+	else
+		# Diff computation failed for a reason other than "no changes" (e.g.
+		# stale/missing ref, shallow clone). Fail closed: we don't know what
+		# changed, so we can't safely skip the review.
+		echo "pre-push: warning: could not diff range '$range': $files" >&2
+		diff_error=1
 	fi
 done
 
-if [ -z "$(echo "$changed_files" | tr -d '[:space:]')" ]; then
+if [ "$diff_error" -ne 0 ]; then
+	echo "pre-push: aborting push — could not determine which files changed, so the required review could not run. Investigate the warning above (e.g. run 'git fetch' to refresh remote refs), or use 'git push --no-verify' if you are certain no review is needed." >&2
+	exit 1
+fi
+
+changed_files=$(printf '%s\n' "$changed_files" | sed '/^$/d' | sort -u)
+
+if [ -z "$changed_files" ]; then
 	exit 0
 fi
 
-pnpm run review:local
+review_timeout="${SCRUTINEER_TIMEOUT:-180}"
+
+status=0
+while IFS= read -r file; do
+	[ -z "$file" ] && continue
+	echo "pre-push: reviewing $file (timeout ${review_timeout}s)"
+	if ! timeout "$review_timeout" pnpm run review:local -- "$file"; then
+		rc=$?
+		if [ "$rc" -eq 124 ]; then
+			echo "pre-push: review of $file timed out after ${review_timeout}s (check ANTHROPIC_API_KEY / network); failing closed" >&2
+		fi
+		status=1
+	fi
+done <<<"$changed_files"
+
+exit "$status"
