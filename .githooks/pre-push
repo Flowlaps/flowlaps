@@ -65,8 +65,8 @@ status=0
 while IFS= read -r file; do
 	[ -z "$file" ] && continue
 	echo "pre-push: reviewing $file (timeout ${review_timeout}s)"
-	if ! timeout "$review_timeout" pnpm run review:local -- "$file"; then
-		rc=$?
+	timeout "$review_timeout" pnpm run review:local -- "$file" && rc=0 || rc=$?
+	if [ "$rc" -ne 0 ]; then
 		if [ "$rc" -eq 124 ]; then
 			echo "pre-push: review of $file timed out after ${review_timeout}s (check ANTHROPIC_API_KEY / network); failing closed" >&2
 		fi

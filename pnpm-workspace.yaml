@@ -1,5 +1,8 @@
 allowBuilds:
   '@prisma/engines': true
+  # Transitive dep of @flowlaps/scrutineer (native JS sandbox for its review
+  # agents). Not version-pinned: pnpm's allowBuilds keys are bare package
+  # names in this file, and name@version scoping is unverified to work here.
   isolated-vm: true
   prisma: true
   sharp: true
@@ -8,4 +11,7 @@ ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
 minimumReleaseAgeExclude:
+  # Published under the same npm account/GitHub org as this repo (not a
+  # third party), but carries no provenance attestation. See PR #8 for the
+  # full trust discussion before adding further exclusions here.
   - '@flowlaps/scrutineer@0.1.0'
