@@ -43,9 +43,22 @@ timeout remains a backstop in case that's ever insufficient — a multi-file
 push can take up to `file_count × timeout` in the worst case before
 failing, since each file's timeout is independent.
 
+scrutineer diffs a file against the git index, not an arbitrary commit
+range, so the hook points a temporary index at the push's base commit
+before invoking it — this makes scrutineer see the actual diff being
+pushed instead of the file's full current contents. That only works when
+you're pushing a single ref that matches your current checkout (the
+normal `git push` case). Pushing multiple refs at once, or pushing a ref
+other than the one you have checked out, falls back to scrutineer
+reviewing each file's full contents, with a warning printed to say so.
+
 To bypass the hook for a specific push (e.g. Ollama isn't reachable yet, or
 a push that doesn't need review), use `git push --no-verify`.
 
 The hook shells out to the GNU coreutils `timeout` command, which isn't
 present by default on macOS/BSD (install via `brew install coreutils`,
 which provides `gtimeout`, or add a `timeout` shim on `PATH`).
+
+scrutineer 0.1.1 requires Node >=22. The repo doesn't enforce this via an
+`engines` field, so on an older Node the hook will fail at push time
+(`pnpm run review:local` erroring) rather than at `pnpm install` time.

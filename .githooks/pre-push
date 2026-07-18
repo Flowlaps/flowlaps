@@ -7,6 +7,9 @@ remote_name="$1"
 
 changed_files=""
 diff_error=0
+ref_count=0
+single_local_sha=""
+single_diff_base=""
 
 while read -r local_ref local_sha remote_ref remote_sha; do
 	[ -z "$local_sha" ] && continue
@@ -29,12 +32,21 @@ while read -r local_ref local_sha remote_ref remote_sha; do
 				fi
 			done
 		fi
-		range="${base:-$empty_tree}..$local_sha"
+		if [ -z "$base" ]; then
+			echo "pre-push: warning: no merge-base found for new branch against $remote_name/{$default_branch,main,master} (shallow clone?); treating entire tree as new" >&2
+		fi
+		diff_base="${base:-$empty_tree}"
 	else
-		range="$remote_sha..$local_sha"
+		diff_base="$remote_sha"
 	fi
+	range="$diff_base..$local_sha"
 
-	if files=$(git diff --name-only "$range" -- '*.ts' '*.tsx' '*.js' '*.jsx' 2>&1); then
+	ref_count=$((ref_count + 1))
+	single_local_sha="$local_sha"
+	single_diff_base="$diff_base"
+
+	stderr_file=$(mktemp)
+	if files=$(git diff --name-only "$range" -- '*.ts' '*.tsx' '*.js' '*.jsx' 2>"$stderr_file"); then
 		if [ -n "$files" ]; then
 			changed_files="$changed_files
 $files"
@@ -43,9 +55,10 @@ $files"
 		# Diff computation failed for a reason other than "no changes" (e.g.
 		# stale/missing ref, shallow clone). Fail closed: we don't know what
 		# changed, so we can't safely skip the review.
-		echo "pre-push: warning: could not diff range '$range': $files" >&2
+		echo "pre-push: warning: could not diff range '$range': $(cat "$stderr_file")" >&2
 		diff_error=1
 	fi
+	rm -f "$stderr_file"
 done
 
 if [ "$diff_error" -ne 0 ]; then
@@ -60,6 +73,44 @@ if [ -z "$changed_files" ]; then
 fi
 
 review_timeout="${SCRUTINEER_TIMEOUT:-180}"
+
+# scrutineer diffs a file's working tree against the git index (falling back
+# to the full file when both are clean) — it has no way to target an
+# arbitrary ref range. At pre-push time the working tree is normally clean,
+# so without help scrutineer would review each file's entire current
+# contents instead of the diff this push actually introduces. Point the
+# index at the push's base tree instead, so scrutineer's own "index vs
+# working tree" diff comes out equal to "base..local_sha" for each file.
+# This only holds up for a single ref pushed from the currently checked-out
+# branch — with multiple refs, or a ref other than HEAD, the working tree
+# doesn't represent what's being pushed either way, so the trick is skipped
+# and scrutineer falls back to its default (full-file) behavior.
+use_index_trick=0
+if [ "$ref_count" -eq 1 ]; then
+	head_sha=$(git rev-parse --quiet --verify HEAD 2>/dev/null || true)
+	if [ -n "$head_sha" ] && [ "$head_sha" = "$single_local_sha" ]; then
+		use_index_trick=1
+	fi
+fi
+
+tmp_index=""
+cleanup() {
+	[ -n "$tmp_index" ] && rm -f "$tmp_index"
+}
+trap cleanup EXIT
+
+if [ "$use_index_trick" -eq 1 ]; then
+	tmp_index=$(mktemp)
+	if GIT_INDEX_FILE="$tmp_index" git read-tree "$single_diff_base" 2>/dev/null; then
+		export GIT_INDEX_FILE="$tmp_index"
+	else
+		echo "pre-push: warning: could not build a diff index for $single_diff_base; scrutineer will review each file's full contents instead of the exact push diff" >&2
+		rm -f "$tmp_index"
+		tmp_index=""
+	fi
+else
+	echo "pre-push: pushing multiple refs or a ref other than the current checkout; scrutineer will review each file's full contents instead of the exact push diff" >&2
+fi
 
 status=0
 while IFS= read -r file; do
