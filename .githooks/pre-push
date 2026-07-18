@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+echo "🔍 Running Scrutineer PR Review..."
+
+# Run the review CLI
+pnpm run review:local
+
+# Capture the exit code
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+  echo "❌ Scrutineer found issues. Push aborted."
+  exit 1
+fi
+
+echo "✅ Scrutineer review passed. Pushing..."
+exit 0

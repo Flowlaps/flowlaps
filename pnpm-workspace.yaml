@@ -1,5 +1,6 @@
 allowBuilds:
   '@prisma/engines': true
+  isolated-vm: true
   prisma: true
   sharp: true
   unrs-resolver: true
