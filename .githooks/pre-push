@@ -68,7 +68,7 @@ while IFS= read -r file; do
 	timeout "$review_timeout" pnpm run review:local -- "$file" && rc=0 || rc=$?
 	if [ "$rc" -ne 0 ]; then
 		if [ "$rc" -eq 124 ]; then
-			echo "pre-push: review of $file timed out after ${review_timeout}s (check ANTHROPIC_API_KEY / network); failing closed" >&2
+			echo "pre-push: review of $file timed out after ${review_timeout}s (check that Ollama is reachable and the model is pulled, or network); failing closed" >&2
 		fi
 		status=1
 	fi

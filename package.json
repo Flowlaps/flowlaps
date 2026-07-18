@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "review:local": "scrutineer review",
+    "review:local": "scrutineer review --provider ollama",
     "postinstall": "prisma generate"
   },
   "dependencies": {
