@@ -46,11 +46,20 @@ failing, since each file's timeout is independent.
 scrutineer diffs a file against the git index, not an arbitrary commit
 range, so the hook points a temporary index at the push's base commit
 before invoking it — this makes scrutineer see the actual diff being
-pushed instead of the file's full current contents. That only works when
-you're pushing a single ref that matches your current checkout (the
-normal `git push` case). Pushing multiple refs at once, or pushing a ref
-other than the one you have checked out, falls back to scrutineer
-reviewing each file's full contents, with a warning printed to say so.
+pushed instead of the file's full current contents. Files newly added by
+the push get an empty placeholder seeded into that temporary index too,
+since scrutineer would otherwise show a new file as a deletion (there's
+no entry for it in the base tree, and scrutineer's own fallback diffs the
+temp index against the wrong side of the comparison).
+
+This only applies when you're pushing a single ref, it matches your
+current checkout, and your working tree is clean relative to it (the
+normal `git push` case right after committing). Pushing multiple refs at
+once, pushing a ref other than the one you have checked out, or pushing
+with uncommitted changes still on disk, falls back to scrutineer
+reviewing each file's full contents instead, with a warning printed to
+say so — the working tree can't be trusted to represent the exact push in
+those cases.
 
 To bypass the hook for a specific push (e.g. Ollama isn't reachable yet, or
 a push that doesn't need review), use `git push --no-verify`.

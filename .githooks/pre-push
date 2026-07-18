@@ -82,13 +82,22 @@ review_timeout="${SCRUTINEER_TIMEOUT:-180}"
 # index at the push's base tree instead, so scrutineer's own "index vs
 # working tree" diff comes out equal to "base..local_sha" for each file.
 # This only holds up for a single ref pushed from the currently checked-out
-# branch — with multiple refs, or a ref other than HEAD, the working tree
-# doesn't represent what's being pushed either way, so the trick is skipped
-# and scrutineer falls back to its default (full-file) behavior.
+# branch, with a working tree that hasn't drifted from that ref (otherwise
+# scrutineer's "index vs working tree" diff would silently pick up whatever
+# uncommitted state happens to be on disk, not what was actually pushed) —
+# in every other case the trick is skipped and scrutineer falls back to its
+# default (full-file) behavior instead of doing something silently wrong.
 use_index_trick=0
-if [ "$ref_count" -eq 1 ]; then
+skip_reason=""
+if [ "$ref_count" -ne 1 ]; then
+	skip_reason="pushing multiple refs or a ref other than the current checkout"
+else
 	head_sha=$(git rev-parse --quiet --verify HEAD 2>/dev/null || true)
-	if [ -n "$head_sha" ] && [ "$head_sha" = "$single_local_sha" ]; then
+	if [ -z "$head_sha" ] || [ "$head_sha" != "$single_local_sha" ]; then
+		skip_reason="pushing a ref other than the current checkout"
+	elif ! git diff-index --quiet HEAD -- 2>/dev/null; then
+		skip_reason="working tree has uncommitted changes"
+	else
 		use_index_trick=1
 	fi
 fi
@@ -103,13 +112,31 @@ if [ "$use_index_trick" -eq 1 ]; then
 	tmp_index=$(mktemp)
 	if GIT_INDEX_FILE="$tmp_index" git read-tree "$single_diff_base" 2>/dev/null; then
 		export GIT_INDEX_FILE="$tmp_index"
+
+		# A file added since single_diff_base has no entry in the temp
+		# index at all. scrutineer's first diff attempt (index vs working
+		# tree) then treats it as untracked and shows nothing, so it falls
+		# back to its second attempt (index vs HEAD) — which renders the
+		# file backwards, as a deletion, since HEAD has it and the temp
+		# index doesn't. Seed an empty blob for each such path so the
+		# first diff attempt sees a real (all-additions) diff instead.
+		empty_blob=""
+		while IFS= read -r file; do
+			[ -z "$file" ] && continue
+			if ! git cat-file -e "$single_diff_base:$file" 2>/dev/null; then
+				[ -z "$empty_blob" ] && empty_blob=$(git hash-object -w -t blob --stdin </dev/null)
+				if ! git update-index --add --cacheinfo "100644,$empty_blob,$file" 2>/dev/null; then
+					echo "pre-push: warning: could not seed a placeholder for new file $file; its review may show it as a deletion" >&2
+				fi
+			fi
+		done <<<"$changed_files"
 	else
 		echo "pre-push: warning: could not build a diff index for $single_diff_base; scrutineer will review each file's full contents instead of the exact push diff" >&2
 		rm -f "$tmp_index"
 		tmp_index=""
 	fi
 else
-	echo "pre-push: pushing multiple refs or a ref other than the current checkout; scrutineer will review each file's full contents instead of the exact push diff" >&2
+	echo "pre-push: $skip_reason; scrutineer will review each file's full contents instead of the exact push diff" >&2
 fi
 
 status=0
