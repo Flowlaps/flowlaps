@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+echo "🔍 Running Scrutineer PR Review..."
+
+zero_sha="0000000000000000000000000000000000000000"
+changed_files=""
+diff_error=0
+review_timeout="${SCRUTINEER_TIMEOUT:-180}"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -z "$local_sha" ] || [ "$local_sha" = "$zero_sha" ] && continue
+
+  if [ "$remote_sha" = "$zero_sha" ]; then
+    # New branch on the remote: diff against its merge-base with main
+    # instead of the previous commit, so the whole branch gets reviewed.
+    if ! base=$(git merge-base origin/main "$local_sha" 2>/dev/null); then
+      if ! base=$(git rev-parse --verify --quiet "$local_sha~1"); then
+        # No parent commit either (root commit) — diff against the empty tree.
+        base=$(git hash-object -t tree /dev/null)
+      fi
+    fi
+  else
+    base="$remote_sha"
+  fi
+
+  if ! files=$(git diff --name-only "$base..$local_sha" -- '*.ts' '*.tsx'); then
+    # Diff computation failed for a reason other than "no changes" (e.g. a
+    # stale/missing ref). Fail closed: we don't know what changed, so we
+    # can't safely skip the review.
+    echo "pre-push: warning: could not diff range '$base..$local_sha'" >&2
+    diff_error=1
+  fi
+  [ -n "$files" ] && changed_files="$changed_files
+$files"
+done
+
+if [ "$diff_error" -ne 0 ]; then
+  echo "❌ pre-push: aborting — could not determine which files changed, so the required review could not run. Run 'git fetch' to refresh remote refs, or use 'git push --no-verify' if you are certain no review is needed." >&2
+  exit 1
+fi
+
+changed_files=$(printf '%s\n' "$changed_files" | sed '/^$/d' | sort -u)
+
+if [ -z "$changed_files" ]; then
+  echo "✅ No TypeScript changes to review. Pushing..."
+  exit 0
+fi
+
+RESULT=0
+while IFS= read -r file; do
+  echo "Reviewing $file (timeout ${review_timeout}s)..."
+  timeout "$review_timeout" pnpm run review:local -- "$file"
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    [ "$rc" -eq 124 ] && echo "pre-push: review of $file timed out after ${review_timeout}s (check that Ollama is reachable and the model is pulled)" >&2
+    RESULT=1
+  fi
+done <<<"$changed_files"
+
+if [ "$RESULT" -ne 0 ]; then
+  echo "❌ Scrutineer found issues. Push aborted."
+  exit 1
+fi
+
+echo "✅ Scrutineer review passed. Pushing..."
+exit 0
