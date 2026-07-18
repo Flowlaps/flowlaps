@@ -22,15 +22,26 @@ git config core.hooksPath .githooks
 reachable Ollama instance rather than an Anthropic API key. Without one,
 the hook will fail and block the push. If a real review can't run, treat
 that as a blocked push you need to fix (get Ollama reachable) rather than
-skipping it.
+skipping it. scrutineer auto-detects which model to use from that
+instance (preferring a currently-running one, falling back to whatever's
+pulled) — no model configuration needed unless you want to pin one via
+`SCRUTINEER_MODEL_OLLAMA`.
+
+If Ollama runs on Windows and you're pushing from WSL, `127.0.0.1` may
+resolve to a different (possibly empty or stale) Ollama instance than the
+one your Windows terminal talks to. Point `OLLAMA_HOST` at the WSL2
+gateway IP instead — find it with `ip route show default` (the `via`
+address) — e.g. `export OLLAMA_HOST=172.x.x.1:11434` in your shell
+profile. scrutineer will warn on every run when `OLLAMA_HOST` isn't a
+loopback address, since it means review content (diffs, AST context) is
+leaving the WSL VM.
 
 Each changed file gets reviewed separately, and each review is capped at
-180 seconds by default (`SCRUTINEER_TIMEOUT` env var to override). This
-matters because a misconfigured `scrutineer` (e.g. Ollama unreachable, or
-missing model) doesn't always fail fast — it can hang well past reporting
-its own failure, so the timeout is what actually bounds the push. A
-multi-file push can take up to `file_count × timeout` in the worst case
-before failing, since each file's timeout is independent.
+180 seconds by default (`SCRUTINEER_TIMEOUT` env var to override). scrutineer
+itself now bounds each model call to 120s internally, but the hook's own
+timeout remains a backstop in case that's ever insufficient — a multi-file
+push can take up to `file_count × timeout` in the worst case before
+failing, since each file's timeout is independent.
 
 To bypass the hook for a specific push (e.g. Ollama isn't reachable yet, or
 a push that doesn't need review), use `git push --no-verify`.

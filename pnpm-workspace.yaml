@@ -14,4 +14,4 @@ minimumReleaseAgeExclude:
   # Published under the same npm account/GitHub org as this repo (not a
   # third party), but carries no provenance attestation. See PR #8 for the
   # full trust discussion before adding further exclusions here.
-  - '@flowlaps/scrutineer@0.1.0'
+  - '@flowlaps/scrutineer@0.1.0 || 0.1.1'
