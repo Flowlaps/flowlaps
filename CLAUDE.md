@@ -177,25 +177,26 @@ For each branch or PR step, activate only the smallest relevant set of skills.
 - Bugfix branch: debugging-and-error-recovery, browser-testing-with-devtools
 - PR preparation branch or final review pass: code-review-and-quality, git-workflow-and-versioning
 
-## Code review with subagent pattern
+## Code Review Workflow
 
 For significant changes, use a dedicated `code-reviewer` subagent as an independent review gate:
 
-1. Use the `code-review-and-quality` skill for the review.
-2. Inside that skill, dispatch a fresh `code-reviewer` subagent:
-   - Give it read-only access (Read, Grep, Glob, Bash).
-   - Do not allow modifications during review.
-3. Ask the subagent to check for:
+- **Strict Role Separation**: You act as my co-author (Claude) for writing code, committing, and opening PRs. The GitHub account `flowlaps-ai-reviewer` is strictly used as an independent reviewer.
+- **Subagent Pattern**: Use the `code-review-and-quality` skill to dispatch a fresh `code-reviewer` subagent with read-only access (Read, Grep, Glob, Bash). Do not allow modifications during review.
+- **Bot Token Usage**: When the subagent executes the review or posts comments to a PR, it MUST authenticate using the `AI_BOT_GITHUB_TOKEN` environment variable so the feedback appears on GitHub as `flowlaps-ai-reviewer`.
+- **Review Scope**: The subagent must check for:
    - security issues
    - missing edge cases
    - error handling
    - test coverage
    - unnecessary complexity
    - overall code quality and consistency
-4. Review findings and fix at least:
-   - all Critical items
-   - all Major items
-5. Only after those are addressed:
+- **Resolution**: Review findings and fix at least all Critical items and all Major items.
+- **Wrap-up**: Only after those are addressed:
    - commit any follow-up changes to the same branch
    - push
    - mark the PR as ready for re-review
+
+## Self-Correcting Memory
+- Before exiting a session, write a brief, 1-sentence bullet point to `/.claude/memory/corrections.md` documenting any architectural mistakes, syntax errors, or workflow violations you made that I had to manually correct.
+- Always read `.claude/memory/corrections.md` at the start of every session to prevent repeating past mistakes.
