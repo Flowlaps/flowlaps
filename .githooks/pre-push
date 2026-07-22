@@ -20,10 +20,16 @@ review_timeout="${SCRUTINEER_TIMEOUT:-180}"
 mismatched_ref=""
 has_reviewable_ref=0
 
-while read -r local_ref local_sha remote_ref remote_sha; do
+while read -r local_ref local_sha remote_ref remote_sha || [ -n "$local_ref" ]; do
   [ -z "$local_sha" ] || [ "$local_sha" = "$zero_sha" ] && continue
 
-  if [ "$local_sha" != "$head_sha" ]; then
+  # An annotated tag's local_sha is the tag *object's* SHA, not the commit
+  # it points at, so it would never equal head_sha even when pushed at
+  # HEAD. Peel it down to the underlying commit before comparing — a no-op
+  # for branches and lightweight tags, which already are commit SHAs.
+  resolved_sha=$(git rev-parse --verify --quiet "${local_sha}^{commit}" 2>/dev/null) || resolved_sha="$local_sha"
+
+  if [ "$resolved_sha" != "$head_sha" ]; then
     mismatched_ref="$local_ref"
     continue
   fi
