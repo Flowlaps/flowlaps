@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "review:local": "scrutineer review --diff origin/main --provider ollama",
+    "review:pr": "scrutineer review --diff origin/main --pr",
     "postinstall": "prisma generate"
   },
   "dependencies": {

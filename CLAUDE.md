@@ -179,18 +179,13 @@ For each branch or PR step, activate only the smallest relevant set of skills.
 
 ## Code Review Workflow
 
-For significant changes, use a dedicated `code-reviewer` subagent as an independent review gate:
+For significant changes, use `scrutineer` (`@flowlaps/scrutineer`, this project's own review CLI) as the independent review gate — not a dispatched Claude subagent and not a parallel chat window:
 
-- **Strict Role Separation**: You act as my co-author (Claude) for writing code, committing, and opening PRs. The GitHub account `flowlaps-ai-reviewer` is strictly used as an independent reviewer.
-- **Subagent Pattern**: Use the `code-review-and-quality` skill to dispatch a fresh `code-reviewer` subagent with read-only access (Read, Grep, Glob, Bash). Do not allow modifications during review.
-- **Bot Token Usage**: When the subagent executes the review or posts comments to a PR, it MUST authenticate using the `AI_BOT_GITHUB_TOKEN` environment variable so the feedback appears on GitHub as `flowlaps-ai-reviewer`.
-- **Review Scope**: The subagent must check for:
-   - security issues
-   - missing edge cases
-   - error handling
-   - test coverage
-   - unnecessary complexity
-   - overall code quality and consistency
+- **Strict Role Separation**: You act as my co-author (Claude) for writing code, committing, and opening PRs. The GitHub account `flowlaps-ai-reviewer` is strictly used as an independent reviewer, and only `scrutineer` posts as that account — never a Claude subagent role-playing as reviewer. Two different Claude sessions independently deciding to "act as the reviewer" produces duplicate, redundant reviews on the same commit; `scrutineer` is the single source of truth for independent review feedback.
+- **Local pre-push gate**: `pnpm run review:local` (wraps `scrutineer review --diff origin/main --provider ollama`) runs automatically via `.githooks/pre-push` before every push, air-gapped via Ollama. This is a fast local check, not the PR-level review of record.
+- **PR-level review**: Run `pnpm run review:pr <PR number>` (no `--` separator — pnpm inserts a literal `--` that breaks scrutineer's arg parsing, unlike plain npm) to post a code-review + security-audit pass as a comment on the PR, authenticated as `flowlaps-ai-reviewer`. Defaults to `--provider anthropic` (needs `ANTHROPIC_API_KEY`) since this is the review of record and benefits from the stronger model; append `--provider ollama` if an air-gapped pass is preferred instead.
+- **Bot Token Usage**: Export `GH_TOKEN="$AI_BOT_GITHUB_TOKEN"` (from `.env.local`) before running the PR-level review, so it authenticates as `flowlaps-ai-reviewer` rather than whatever account the ambient `gh auth` session belongs to.
+- **Review Scope**: `scrutineer` runs its own `code-reviewer` and `security-auditor` personas per changed file — no need to separately specify a checklist.
 - **Resolution**: Review findings and fix at least all Critical items and all Major items.
 - **Wrap-up**: Only after those are addressed:
    - commit any follow-up changes to the same branch
