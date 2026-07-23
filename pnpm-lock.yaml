@@ -55,8 +55,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@flowlaps/scrutineer':
-        specifier: ^0.2.0
-        version: 0.2.0(zod@4.4.3)
+        specifier: ^0.2.1
+        version: 0.2.1(zod@4.4.3)
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.2
@@ -461,8 +461,8 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@flowlaps/scrutineer@0.2.0':
-    resolution: {integrity: sha512-lF1G3F8b5z5GBtQkfwZvajEQJdRlkEkrBpxtkd8glfSpRy4QiaL1lck6OSfRww3YGD+iKCBafIE9TWRsprClRg==}
+  '@flowlaps/scrutineer@0.2.1':
+    resolution: {integrity: sha512-LtODRcQ5DInzGpEqDeEe9ZYvhJ26Ixy1UhN9Tnp7kaQodeCXuZpzX5bhfSCUvgueQT0zmmBmakoO78YO1CSaRg==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -4461,7 +4461,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@flowlaps/scrutineer@0.2.0(zod@4.4.3)':
+  '@flowlaps/scrutineer@0.2.1(zod@4.4.3)':
     dependencies:
       '@ai-sdk/anthropic': 4.0.16(zod@4.4.3)
       '@clack/prompts': 1.7.0
