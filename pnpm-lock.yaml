@@ -55,8 +55,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@flowlaps/scrutineer':
-        specifier: ^0.2.1
-        version: 0.2.1(zod@4.4.3)
+        specifier: ^0.5.0
+        version: 0.5.0(zod@4.4.3)
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.2
@@ -120,8 +120,26 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  '@ai-sdk/google@4.0.22':
+    resolution: {integrity: sha512-xj5dyIT9nOL/k0oW08xkSOcgBdtWe+pvEvg7myKAJ1f7dAO1CYD/tXxnxnGLZZbUN4AmCf/rPvvY717EZXuUTA==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/openai@4.0.18':
+    resolution: {integrity: sha512-+qz0wGrn6gSNoxMetnQIhUPV/xhzfhYMiLBZnLperfIQE6d0V/NNA0rI01k27zaiQdg/2FCPeYg6GOf21cp45g==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/provider-utils@5.0.11':
     resolution: {integrity: sha512-7/96wE+ZsKB35iS9ASyllrE4Ym/EolXEB7AkuJ5FI++fmS85BVTAs77890C+1Z2jwHfBKjBQSBmsliOsAh0iFQ==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/provider-utils@5.0.12':
+    resolution: {integrity: sha512-bbhlOgHeYwrIGheLkM6fhS8hVger8uFPmcOLg+kxc9EFh7y30XYorWhthlYAgpadO3SJhFZrIcEknN7qEqEVvA==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -461,8 +479,8 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@flowlaps/scrutineer@0.2.1':
-    resolution: {integrity: sha512-LtODRcQ5DInzGpEqDeEe9ZYvhJ26Ixy1UhN9Tnp7kaQodeCXuZpzX5bhfSCUvgueQT0zmmBmakoO78YO1CSaRg==}
+  '@flowlaps/scrutineer@0.5.0':
+    resolution: {integrity: sha512-D4dabNBTcLsFFh4m5iY/laFkh6roWF8RfbXPTG1ULZ7xy60JJ6PkRYm1seMxjjacjuW6QewpsYB6NUZ4Hsxaug==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -4043,7 +4061,27 @@ snapshots:
       '@vercel/oidc': 3.2.0
       zod: 4.4.3
 
+  '@ai-sdk/google@4.0.22(zod@4.4.3)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.3
+      '@ai-sdk/provider-utils': 5.0.12(zod@4.4.3)
+      zod: 4.4.3
+
+  '@ai-sdk/openai@4.0.18(zod@4.4.3)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.3
+      '@ai-sdk/provider-utils': 5.0.12(zod@4.4.3)
+      zod: 4.4.3
+
   '@ai-sdk/provider-utils@5.0.11(zod@4.4.3)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.3
+      '@standard-schema/spec': 1.1.0
+      '@workflow/serde': 4.1.0
+      eventsource-parser: 3.1.0
+      zod: 4.4.3
+
+  '@ai-sdk/provider-utils@5.0.12(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 4.0.3
       '@standard-schema/spec': 1.1.0
@@ -4461,9 +4499,11 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@flowlaps/scrutineer@0.2.1(zod@4.4.3)':
+  '@flowlaps/scrutineer@0.5.0(zod@4.4.3)':
     dependencies:
       '@ai-sdk/anthropic': 4.0.16(zod@4.4.3)
+      '@ai-sdk/google': 4.0.22(zod@4.4.3)
+      '@ai-sdk/openai': 4.0.18(zod@4.4.3)
       '@clack/prompts': 1.7.0
       ai: 7.0.31(zod@4.4.3)
       commander: 13.1.0

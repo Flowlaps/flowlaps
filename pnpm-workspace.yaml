@@ -8,4 +8,6 @@ ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
 minimumReleaseAgeExclude:
-  - '@flowlaps/scrutineer@0.2.1'
+  - '@flowlaps/scrutineer@0.5.0'
+  - '@ai-sdk/google@4.0.22'
+  - '@ai-sdk/openai@4.0.18'
