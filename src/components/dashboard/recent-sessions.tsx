@@ -7,15 +7,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { formatLapTime, formatRelativeDate } from "@/lib/format";
+import { formatLapTime, formatRelativeDate, sessionTypeLabels } from "@/lib/format";
 import type { SessionSummary } from "@/types/session";
-
-const sessionTypeLabels: Record<SessionSummary["sessionType"], string> = {
-  practice: "Practice",
-  qualifying: "Qualifying",
-  race: "Race",
-  hotlap: "Hotlap",
-};
 
 interface RecentSessionsProps {
   sessions: SessionSummary[];

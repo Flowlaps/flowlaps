@@ -1,3 +1,12 @@
+import type { SessionSummary } from "@/types/session";
+
+export const sessionTypeLabels: Record<SessionSummary["sessionType"], string> = {
+  practice: "Practice",
+  qualifying: "Qualifying",
+  race: "Race",
+  hotlap: "Hotlap",
+};
+
 export function formatLapTime(ms: number): string {
   const minutes = Math.floor(ms / 60_000);
   const seconds = Math.floor((ms % 60_000) / 1000);

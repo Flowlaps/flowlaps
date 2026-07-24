@@ -1,5 +1,6 @@
 import type { SessionSummary } from "@/types/session";
 import type { CoachingReportSummary } from "@/types/coaching-report";
+import type { LapSummary } from "@/types/lap";
 
 export const mockSessions: SessionSummary[] = [
   {
@@ -96,3 +97,71 @@ export const mockCoachingReports: CoachingReportSummary[] = [
     ],
   },
 ];
+
+// A small seeded PRNG so generated lap data is deterministic across renders
+// and test runs, instead of drifting every time this module is imported.
+function mulberry32(seed: number): () => number {
+  let state = seed;
+  return () => {
+    state |= 0;
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function hashString(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash << 5) - hash + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+}
+
+// Generates believable per-lap sector splits for a session: one lap hits the
+// session's recorded bestLapMs exactly, the first lap is an invalid out lap
+// (skipped when there's only one lap), and every other lap lands somewhere
+// between the best and average lap time. Sector times always sum exactly to
+// the lap time, so downstream consumers never have to reconcile a rounding
+// gap between the two.
+function buildLapsForSession(session: SessionSummary): LapSummary[] {
+  const random = mulberry32(hashString(session.id));
+  const spreadMs = session.averageLapMs - session.bestLapMs;
+  const bestLapIndex =
+    session.lapCount <= 1
+      ? 0
+      : Math.min(session.lapCount - 1, Math.max(1, Math.round(session.lapCount * 0.35)));
+
+  return Array.from({ length: session.lapCount }, (_, index) => {
+    const lapNumber = index + 1;
+    const isBestLap = index === bestLapIndex;
+    const isOutLap = index === 0 && session.lapCount > 1;
+
+    const lapTimeMs = isBestLap
+      ? session.bestLapMs
+      : isOutLap
+        ? Math.round(session.averageLapMs + spreadMs * 1.5)
+        : Math.round(session.bestLapMs + spreadMs * 0.3 + random() * spreadMs);
+
+    const sector1Ms = Math.round(lapTimeMs * (0.33 + (random() - 0.5) * 0.03));
+    const sector2Ms = Math.round(lapTimeMs * (0.33 + (random() - 0.5) * 0.03));
+    const sector3Ms = lapTimeMs - sector1Ms - sector2Ms;
+
+    return {
+      id: `${session.id}-lap-${lapNumber}`,
+      sessionId: session.id,
+      lapNumber,
+      lapTimeMs,
+      isValid: !isOutLap,
+      sector1Ms,
+      sector2Ms,
+      sector3Ms,
+    };
+  });
+}
+
+export const mockLaps: Record<string, LapSummary[]> = Object.fromEntries(
+  mockSessions.map((session) => [session.id, buildLapsForSession(session)]),
+);
