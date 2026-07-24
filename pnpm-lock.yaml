@@ -55,8 +55,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@flowlaps/scrutineer':
-        specifier: ^0.5.1
-        version: 0.5.1(zod@4.4.3)
+        specifier: ^0.6.0
+        version: 0.6.0(zod@4.4.3)
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.2
@@ -479,8 +479,8 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@flowlaps/scrutineer@0.5.1':
-    resolution: {integrity: sha512-CMS0rYT/OqgB3iuM+0va4fOVGUUaiNEqHwa1dRs7Nx4bHlcuLi4m3j9/fmxuvpITSAZvn28TVXayEVecGVFtSg==}
+  '@flowlaps/scrutineer@0.6.0':
+    resolution: {integrity: sha512-9pog4mfar3bdR6JKFY8OatR4bifRkzr79MOhtOWm/2kTCf9ym7WXoWMKplOkJdA6RBg1RWa/aZ/e65/d97i5mg==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -4499,7 +4499,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@flowlaps/scrutineer@0.5.1(zod@4.4.3)':
+  '@flowlaps/scrutineer@0.6.0(zod@4.4.3)':
     dependencies:
       '@ai-sdk/anthropic': 4.0.16(zod@4.4.3)
       '@ai-sdk/google': 4.0.22(zod@4.4.3)
