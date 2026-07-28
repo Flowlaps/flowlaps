@@ -20,7 +20,7 @@ jobs:
           node-version: 22
 
       - name: Run Scrutineer review
-        run: npx @flowlaps/scrutineer@latest review --diff origin/main --pr ${{ github.event.pull_request.number }} --provider gemini
+        run: npx @flowlaps/scrutineer@latest review --diff origin/main --pr ${{ github.event.pull_request.number }} --provider openai
         env:
-          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.FLOWLAPS_REVIEWER_TOKEN }}
