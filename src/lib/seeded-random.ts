@@ -11,6 +11,9 @@ export function mulberry32(seed: number): () => number {
   };
 }
 
+// Can return a negative number (32-bit signed overflow via `|= 0`) — that's
+// fine as a mulberry32 seed since its state is coerced with `|= 0` too, so
+// there's no need to normalize it with Math.abs().
 export function hashString(value: string): number {
   let hash = 0;
   for (let i = 0; i < value.length; i++) {

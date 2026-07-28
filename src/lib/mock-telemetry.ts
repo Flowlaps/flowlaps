@@ -25,6 +25,11 @@ function smoothstep(t: number): number {
 
 // Same physical corner layout for every lap of a given track, so laps within
 // a session (and across sessions on the same track) are directly comparable.
+// Corner spacing/zone widths are only softly guaranteed not to overlap (±100m
+// jitter around ~600m base spacing, vs. a braking+exit zone that can reach
+// ~290m under high severity/pace variance) — sampleAt() takes whichever
+// corner yields the lower speed at a given point, so a rare overlap just
+// blends smoothly into the more severe corner rather than breaking anything.
 function buildTrackLayout(trackName: string): { topSpeedKph: number; corners: CornerProfile[] } {
   const random = mulberry32(hashString(trackName));
   const topSpeedKph = 250 + random() * 50;

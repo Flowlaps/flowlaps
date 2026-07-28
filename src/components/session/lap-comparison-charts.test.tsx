@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { LapComparisonCharts } from "./lap-comparison-charts";
 import type { ComparisonPoint } from "@/lib/lap-comparison";
 
@@ -25,9 +25,23 @@ const series: ComparisonPoint[] = [
 ];
 
 describe("LapComparisonCharts", () => {
-  it("renders the speed, brake, and throttle charts without throwing", () => {
-    expect(() =>
-      render(<LapComparisonCharts series={series} selectedLapNumber={5} />),
-    ).not.toThrow();
+  it("renders a card for each of speed, brake, and throttle", () => {
+    render(<LapComparisonCharts series={series} selectedLapNumber={5} />);
+    expect(screen.getByText("Speed")).toBeInTheDocument();
+    expect(screen.getByText("Brake")).toBeInTheDocument();
+    expect(screen.getByText("Throttle")).toBeInTheDocument();
+  });
+
+  it("gives each chart an accessible label naming the metric and laps being compared", () => {
+    render(<LapComparisonCharts series={series} selectedLapNumber={5} />);
+    expect(
+      screen.getByRole("img", { name: "Speed comparison: best lap versus lap 5" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Brake comparison: best lap versus lap 5" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Throttle comparison: best lap versus lap 5" }),
+    ).toBeInTheDocument();
   });
 });

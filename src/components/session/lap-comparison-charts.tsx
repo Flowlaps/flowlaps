@@ -63,7 +63,11 @@ export function LapComparisonCharts({ series, selectedLapNumber }: LapComparison
             <CardDescription>{chart.description}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-56 w-full">
+            <div
+              className="h-56 w-full"
+              role="img"
+              aria-label={`${chart.title} comparison: best lap versus lap ${selectedLapNumber}`}
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={series} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
