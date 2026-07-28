@@ -11,3 +11,139 @@ model Waitlist {
   email     String   @unique
   createdAt DateTime @default(now())
 }
+
+enum SessionType {
+  practice
+  qualifying
+  race
+  hotlap
+}
+
+enum SourceType {
+  csv
+  simhubPoll @map("simhub-poll")
+  udpForward @map("udp-forward")
+  manual
+}
+
+model Driver {
+  id            String    @id @default(uuid())
+  displayName   String
+  preferredSims String[]  @default([])
+  coachingStyle String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+}
+
+model Track {
+  id          String    @id @default(uuid())
+  name        String
+  layout      String?
+  countryCode String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  sessions    Session[]
+}
+
+model Car {
+  id        String    @id @default(uuid())
+  sim       String
+  className String
+  carName   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  sessions  Session[]
+}
+
+model Session {
+  id              String           @id @default(uuid())
+  driverId        String
+  driver          Driver           @relation(fields: [driverId], references: [id])
+  trackId         String
+  track           Track            @relation(fields: [trackId], references: [id])
+  carId           String
+  car             Car              @relation(fields: [carId], references: [id])
+  sim             String
+  sessionType     SessionType
+  sourceType      SourceType
+  sourceFilename  String?
+  startedAt       DateTime
+  endedAt         DateTime
+  lapCount        Int
+  bestLapMs       Int
+  averageLapMs    Int
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  laps            Lap[]
+  coachingReports CoachingReport[]
+
+  @@index([driverId])
+  @@index([trackId])
+  @@index([carId])
+}
+
+model Lap {
+  id              String           @id @default(uuid())
+  sessionId       String
+  session         Session          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  lapNumber       Int
+  lapTimeMs       Int
+  isValid         Boolean          @default(true)
+  sector1Ms       Int
+  sector2Ms       Int
+  sector3Ms       Int
+  createdAt       DateTime         @default(now())
+  telemetryPoints TelemetryPoint[]
+
+  @@unique([sessionId, lapNumber])
+  @@index([sessionId])
+}
+
+model TelemetryPoint {
+  id               String   @id @default(uuid())
+  lapId            String
+  lap              Lap      @relation(fields: [lapId], references: [id], onDelete: Cascade)
+  sampleIndex      Int
+  timestampMs      Int
+  distanceMeters   Float
+  speedKph         Float
+  throttlePct      Float
+  brakePct         Float
+  steeringAngleDeg Float
+  gear             Int
+  rpm              Int?
+  createdAt        DateTime @default(now())
+
+  @@unique([lapId, sampleIndex])
+  @@index([lapId])
+}
+
+model CoachingReport {
+  id               String              @id @default(uuid())
+  sessionId        String
+  session          Session             @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  summary          String
+  paceNotes        String?
+  brakingNotes     String?
+  throttleNotes    String?
+  consistencyNotes String?
+  nextPracticePlan String
+  createdAt        DateTime            @default(now())
+  focusAreas       PracticeFocusArea[]
+
+  @@index([sessionId])
+}
+
+model PracticeFocusArea {
+  id          String         @id @default(uuid())
+  reportId    String
+  report      CoachingReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  category    String
+  title       String
+  description String
+  priority    Int
+  createdAt   DateTime       @default(now())
+
+  @@index([reportId])
+}
