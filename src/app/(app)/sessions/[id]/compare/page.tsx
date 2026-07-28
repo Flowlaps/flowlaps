@@ -17,6 +17,18 @@ interface ComparePageProps {
   searchParams: Promise<{ lap?: string }>;
 }
 
+function BackToSessionLink({ sessionId }: { sessionId: string }) {
+  return (
+    <Link
+      href={`/sessions/${sessionId}`}
+      className="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <ArrowLeft className="size-4" />
+      Back to session
+    </Link>
+  );
+}
+
 export default async function ComparePage({ params, searchParams }: ComparePageProps) {
   const { id } = await params;
   const { lap: lapParam } = await searchParams;
@@ -32,13 +44,7 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
   if (!comparison) {
     return (
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-10">
-        <Link
-          href={`/sessions/${session.id}`}
-          className="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Back to session
-        </Link>
+        <BackToSessionLink sessionId={session.id} />
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-32 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">Not enough laps to compare yet.</h1>
           <p className="max-w-md text-muted-foreground">
@@ -54,6 +60,9 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
 
   const { bestLap, comparableLaps, selectedLap } = comparison;
 
+  // Cheap against mock data generated in-memory; once this reads real
+  // per-sample telemetry, generating both laps synchronously per request
+  // will need caching/streaming instead.
   const bestTelemetry = generateLapTelemetry(session, bestLap);
   const selectedTelemetry = generateLapTelemetry(session, selectedLap);
   const series = buildComparisonSeries(bestTelemetry, selectedTelemetry);
@@ -62,13 +71,7 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-10">
       <div className="flex flex-col gap-4">
-        <Link
-          href={`/sessions/${session.id}`}
-          className="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Back to session
-        </Link>
+        <BackToSessionLink sessionId={session.id} />
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Lap comparison</h1>
           <p className="text-muted-foreground">

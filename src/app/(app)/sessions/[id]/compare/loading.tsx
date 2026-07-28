@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { COMPARISON_CHART_COUNT } from "@/components/session/lap-comparison-charts";
 
 export default function Loading() {
   return (
@@ -21,7 +22,7 @@ export default function Loading() {
         </CardContent>
       </Card>
 
-      {Array.from({ length: 3 }).map((_, index) => (
+      {Array.from({ length: COMPARISON_CHART_COUNT }).map((_, index) => (
         <Card key={index}>
           <CardContent className="py-2">
             <div className="h-56 w-full animate-pulse rounded-md bg-muted" />

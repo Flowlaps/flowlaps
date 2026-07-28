@@ -23,8 +23,18 @@ interface ChartSpec {
   description: string;
   bestKey: keyof ComparisonPoint;
   selectedKey: keyof ComparisonPoint;
-  unit: string;
+  formatValue: (value: unknown) => string;
   domain?: [number, number];
+}
+
+// A stable per-unit formatter, built once at module load rather than inline
+// in JSX, so recharts gets the same function reference across renders.
+function createValueFormatter(unit: string) {
+  return (value: unknown) => `${Math.round(Number(value))} ${unit}`;
+}
+
+function formatDistance(value: unknown): string {
+  return `${Math.round(Number(value))}m`;
 }
 
 const CHARTS: ChartSpec[] = [
@@ -33,14 +43,14 @@ const CHARTS: ChartSpec[] = [
     description: "Speed through the lap",
     bestKey: "bestSpeedKph",
     selectedKey: "selectedSpeedKph",
-    unit: "kph",
+    formatValue: createValueFormatter("kph"),
   },
   {
     title: "Brake",
     description: "Brake input through the lap",
     bestKey: "bestBrakePct",
     selectedKey: "selectedBrakePct",
-    unit: "%",
+    formatValue: createValueFormatter("%"),
     domain: [0, 100],
   },
   {
@@ -48,10 +58,14 @@ const CHARTS: ChartSpec[] = [
     description: "Throttle input through the lap",
     bestKey: "bestThrottlePct",
     selectedKey: "selectedThrottlePct",
-    unit: "%",
+    formatValue: createValueFormatter("%"),
     domain: [0, 100],
   },
 ];
+
+// Exported so loading.tsx's skeleton can render the same number of chart
+// placeholders without duplicating (and drifting from) this count.
+export const COMPARISON_CHART_COUNT = CHARTS.length;
 
 export function LapComparisonCharts({ series, selectedLapNumber }: LapComparisonChartsProps) {
   return (
@@ -73,14 +87,14 @@ export function LapComparisonCharts({ series, selectedLapNumber }: LapComparison
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis
                     dataKey="distanceMeters"
-                    tickFormatter={(value: number) => `${value}m`}
+                    tickFormatter={formatDistance}
                     stroke="var(--muted-foreground)"
                     fontSize={12}
                   />
                   <YAxis domain={chart.domain} stroke="var(--muted-foreground)" fontSize={12} />
                   <Tooltip
-                    formatter={(value) => `${Math.round(Number(value))} ${chart.unit}`}
-                    labelFormatter={(value) => `${Math.round(Number(value))}m`}
+                    formatter={chart.formatValue}
+                    labelFormatter={formatDistance}
                     contentStyle={{
                       backgroundColor: "var(--card)",
                       borderColor: "var(--border)",
