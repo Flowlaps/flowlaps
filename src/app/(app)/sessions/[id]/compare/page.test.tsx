@@ -57,7 +57,9 @@ vi.mock("@/lib/mock-data", () => ({
       buildLap({ id: "session-full-lap-2", lapNumber: 2, lapTimeMs: 102_000 }),
       buildLap({ id: "session-full-lap-3", lapNumber: 3, lapTimeMs: 103_000 }),
     ],
-    "session-empty": [buildLap({ id: "session-empty-lap-1", lapNumber: 1, lapTimeMs: 100_000 })],
+    "session-empty": [
+      buildLap({ id: "session-empty-lap-1", sessionId: "session-empty", lapNumber: 1, lapTimeMs: 100_000 }),
+    ],
   },
 }));
 

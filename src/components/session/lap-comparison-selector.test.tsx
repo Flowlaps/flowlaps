@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { LapComparisonSelector } from "./lap-comparison-selector";
 import type { LapSummary } from "@/types/lap";
@@ -11,6 +11,11 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/sessions/session-1/compare",
   useSearchParams: () => searchParams,
 }));
+
+beforeEach(() => {
+  replace.mockClear();
+  searchParams = new URLSearchParams();
+});
 
 function buildLap(overrides: Partial<LapSummary>): LapSummary {
   return {
