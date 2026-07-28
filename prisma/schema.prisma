@@ -26,6 +26,24 @@ enum SourceType {
   manual
 }
 
+enum ImportStatus {
+  uploaded
+  parsed
+  failed
+}
+
+model Import {
+  id            String       @id @default(uuid())
+  filename      String
+  fileSizeBytes Int
+  rawContent    String
+  status        ImportStatus @default(uploaded)
+  errorMessage  String?
+  createdAt     DateTime     @default(now())
+
+  @@index([status])
+}
+
 model Driver {
   id            String    @id @default(uuid())
   displayName   String
