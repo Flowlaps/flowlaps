@@ -75,8 +75,8 @@ export function LapComparisonCharts({ series, selectedLapNumber }: LapComparison
                   />
                   <YAxis domain={chart.domain} stroke="var(--muted-foreground)" fontSize={12} />
                   <Tooltip
-                    formatter={(value) => `${value} ${chart.unit}`}
-                    labelFormatter={(value) => `${value}m`}
+                    formatter={(value) => `${Math.round(Number(value))} ${chart.unit}`}
+                    labelFormatter={(value) => `${Math.round(Number(value))}m`}
                     contentStyle={{
                       backgroundColor: "var(--card)",
                       borderColor: "var(--border)",
@@ -100,6 +100,7 @@ export function LapComparisonCharts({ series, selectedLapNumber }: LapComparison
                     stroke="var(--foreground)"
                     strokeWidth={2}
                     strokeOpacity={0.6}
+                    strokeDasharray="6 4"
                     dot={false}
                   />
                 </LineChart>

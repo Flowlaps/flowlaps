@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
@@ -80,7 +81,9 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
         <p className="text-sm text-muted-foreground">
           Best lap: Lap {bestLap.lapNumber} — {formatLapTime(bestLap.lapTimeMs)}
         </p>
-        <LapComparisonSelector laps={comparableLaps} selectedLapId={selectedLap.id} />
+        <Suspense fallback={<div className="h-8 w-48 animate-pulse rounded-lg bg-muted" />}>
+          <LapComparisonSelector laps={comparableLaps} selectedLapId={selectedLap.id} />
+        </Suspense>
       </div>
 
       <LapComparisonCallouts summary={summary} />
