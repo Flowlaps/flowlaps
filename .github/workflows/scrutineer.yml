@@ -23,4 +23,4 @@ jobs:
         run: npx @flowlaps/scrutineer@latest review --diff origin/main --pr ${{ github.event.pull_request.number }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.FLOWLAPS_REVIEWER_TOKEN }}
