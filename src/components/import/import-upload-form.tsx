@@ -49,7 +49,8 @@ export function ImportUploadForm() {
       }
 
       setState({ status: "success", filename: body.filename });
-    } catch {
+    } catch (error) {
+      console.error("ImportUploadForm: failed to upload file", error);
       setState({ status: "error", message: UNEXPECTED_ERROR_MESSAGE });
     }
   }
