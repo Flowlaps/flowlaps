@@ -94,8 +94,12 @@ Use this workflow for every meaningful implementation step:
 5. Add and commit with a clear message.
 6. Push the branch to the remote.
 7. Open a pull request. Vercel's GitHub integration deploys a preview automatically on every push to the PR — no manual deploy step needed.
-8. Run `pnpm run review:pr <PR number>` to post the scrutineer code-review + security-audit pass as a PR comment (see Code Review Workflow below).
+8. Scrutineer's code-review + security-audit pass runs automatically via a GitHub Action when the PR is opened (and again on every subsequent push) — no manual step needed (see Code Review Workflow below).
 9. Stop and wait for review feedback before continuing.
+
+### Ticket-to-PR granularity
+
+Prefer multiple smaller PR checkpoints over one large PR per ticket, whenever a ticket has a natural seam — e.g. a pure data/logic layer vs. its UI layer, or "ship the feature" vs. a separate follow-up PR for addressing leftover review feedback. Confirmed on Ticket 4 (lap comparison view): one large PR took 5 Scrutineer review rounds to reach a clean state (partly because Scrutineer has no memory across re-invocations on the same PR, so already-fixed findings kept resurfacing); splitting the leftover review feedback into its own follow-up PR converged in 2 rounds. More checkpoints means more round trips per ticket, but each one is smaller to review — this has proven to even out in practice, not slow things down. Don't force a split on tickets that are already small.
 
 ## Collaboration loop
 
@@ -114,7 +118,7 @@ After opening a pull request:
 - Keep branches small and reviewable.
 - Do not mix unrelated work into the same branch.
 - Do not perform drive-by refactors unless explicitly requested.
-- If a task grows too large, propose splitting it into smaller PRs.
+- If a task grows too large, propose splitting it into smaller PRs — see "Ticket-to-PR granularity" above for when to do this proactively, not just as a last resort.
 
 ## Commit guidance
 
@@ -183,12 +187,12 @@ For each branch or PR step, activate only the smallest relevant set of skills.
 For significant changes, use `scrutineer` (`@flowlaps/scrutineer`, this project's own review CLI) as the independent review gate — not a dispatched Claude subagent and not a parallel chat window:
 
 - **Strict Role Separation**: You act as my co-author (Claude) for writing code, committing, and opening PRs. The GitHub account `flowlaps-ai-reviewer` is strictly used as an independent reviewer, and only `scrutineer` posts as that account — never a Claude subagent role-playing as reviewer. Two different Claude sessions independently deciding to "act as the reviewer" produces duplicate, redundant reviews on the same commit; `scrutineer` is the single source of truth for independent review feedback.
-- **No pre-push hook**: There is no automatic git hook running scrutineer before push. Every PR gets a review by explicitly running `review:pr` (below) right after opening it — this is the review of record, not a fast/best-effort local pass.
-- **PR-level review**: Run `pnpm run review:pr <PR number>` (no `--` separator — pnpm inserts a literal `--` that breaks scrutineer's arg parsing, unlike plain npm) to post a code-review + security-audit pass as a comment on the PR, authenticated as `flowlaps-ai-reviewer`. Defaults to `--provider anthropic` (needs `ANTHROPIC_API_KEY`) for a meaningful review from the stronger model; append `--provider ollama` only if you deliberately want an air-gapped pass instead.
-- **Optional manual local check**: `pnpm run review:local` (wraps `scrutineer review --diff origin/main --provider ollama`) is still available to run by hand for a fast, air-gapped sanity check before opening a PR — it's just no longer wired to any git hook.
-- **Bot Token Usage**: Export `GITHUB_TOKEN="$AI_BOT_GITHUB_TOKEN"` (from `.env.local`) before running the PR-level review, so it authenticates as `flowlaps-ai-reviewer` rather than whatever account the ambient `gh auth` session belongs to. This is `scrutineer`'s own env var name (verified in its source, `dist/index.js`) — not `GH_TOKEN`, which is the `gh` CLI's convention and does nothing for `scrutineer` itself.
+- **Automatic PR review**: A GitHub Actions workflow runs `scrutineer` automatically whenever a PR is opened, reopened, or pushed to — no manual invocation needed. This is the review of record, authenticated as `flowlaps-ai-reviewer` via a repo secret (not something to export locally anymore).
+- **Optional manual local check**: `pnpm run review:local` (wraps `scrutineer review --diff origin/main --provider ollama`) is still available to run by hand for a fast, air-gapped sanity check before opening a PR.
+- **Manual re-trigger (rare)**: `pnpm run review:pr <PR number>` (no `--` separator — pnpm inserts a literal `--` that breaks scrutineer's arg parsing, unlike plain npm) can still be run by hand if you need to force a re-review without a new push, but this shouldn't be needed in the normal flow.
 - **Review Scope**: `scrutineer` runs its own `code-reviewer` and `security-auditor` personas per changed file — no need to separately specify a checklist.
-- **Resolution**: Review findings and fix at least all Critical items and all Major items.
+- **Resolution**: Review findings and fix at least all Critical items and all Major/Important items.
+- **Reply and resolve, don't just fix silently**: For each finding that's addressed (fixed, or dismissed with rationale), reply on its specific review-comment thread explaining what changed or why it's not being changed, then resolve that thread via GitHub's GraphQL `resolveReviewThread` mutation (the REST API doesn't expose thread resolution). Findings that couldn't be anchored to a diff line show up in the review body instead — reply to those with a regular PR comment.
 - **Wrap-up**: Only after those are addressed:
    - commit any follow-up changes to the same branch
    - push
