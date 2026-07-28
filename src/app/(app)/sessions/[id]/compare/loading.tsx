@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { COMPARISON_CHART_COUNT } from "@/components/session/lap-comparison-charts";
+import { COMPARISON_CHART_COUNT } from "@/lib/comparison-chart-config";
 
 export default function Loading() {
   return (

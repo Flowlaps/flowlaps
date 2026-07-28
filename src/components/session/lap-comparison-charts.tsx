@@ -11,61 +11,13 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CHARTS, formatDistance } from "@/lib/comparison-chart-config";
 import type { ComparisonPoint } from "@/lib/lap-comparison";
 
 interface LapComparisonChartsProps {
   series: ComparisonPoint[];
   selectedLapNumber: number;
 }
-
-interface ChartSpec {
-  title: string;
-  description: string;
-  bestKey: keyof ComparisonPoint;
-  selectedKey: keyof ComparisonPoint;
-  formatValue: (value: unknown) => string;
-  domain?: [number, number];
-}
-
-// A stable per-unit formatter, built once at module load rather than inline
-// in JSX, so recharts gets the same function reference across renders.
-function createValueFormatter(unit: string) {
-  return (value: unknown) => `${Math.round(Number(value))} ${unit}`;
-}
-
-function formatDistance(value: unknown): string {
-  return `${Math.round(Number(value))}m`;
-}
-
-const CHARTS: ChartSpec[] = [
-  {
-    title: "Speed",
-    description: "Speed through the lap",
-    bestKey: "bestSpeedKph",
-    selectedKey: "selectedSpeedKph",
-    formatValue: createValueFormatter("kph"),
-  },
-  {
-    title: "Brake",
-    description: "Brake input through the lap",
-    bestKey: "bestBrakePct",
-    selectedKey: "selectedBrakePct",
-    formatValue: createValueFormatter("%"),
-    domain: [0, 100],
-  },
-  {
-    title: "Throttle",
-    description: "Throttle input through the lap",
-    bestKey: "bestThrottlePct",
-    selectedKey: "selectedThrottlePct",
-    formatValue: createValueFormatter("%"),
-    domain: [0, 100],
-  },
-];
-
-// Exported so loading.tsx's skeleton can render the same number of chart
-// placeholders without duplicating (and drifting from) this count.
-export const COMPARISON_CHART_COUNT = CHARTS.length;
 
 export function LapComparisonCharts({ series, selectedLapNumber }: LapComparisonChartsProps) {
   return (
