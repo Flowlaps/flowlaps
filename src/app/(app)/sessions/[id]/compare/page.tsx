@@ -6,7 +6,7 @@ import { LapComparisonSelector } from "@/components/session/lap-comparison-selec
 import { LapComparisonCallouts } from "@/components/session/lap-comparison-callouts";
 import { LapComparisonCharts } from "@/components/session/lap-comparison-charts";
 import { mockSessions, mockLaps } from "@/lib/mock-data";
-import { getBestLap } from "@/lib/lap-analysis";
+import { resolveLapComparison } from "@/lib/lap-analysis";
 import { generateLapTelemetry } from "@/lib/mock-telemetry";
 import { buildComparisonSeries, buildComparisonSummary } from "@/lib/lap-comparison";
 import { formatLapTime } from "@/lib/format";
@@ -26,10 +26,9 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
   }
 
   const laps = mockLaps[session.id] ?? [];
-  const bestLap = getBestLap(laps);
-  const comparableLaps = laps.filter((lap) => lap.isValid && lap.id !== bestLap?.id);
+  const comparison = resolveLapComparison(laps, lapParam);
 
-  if (!bestLap || comparableLaps.length === 0) {
+  if (!comparison) {
     return (
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-10">
         <Link
@@ -52,8 +51,7 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
     );
   }
 
-  const selectedLap =
-    comparableLaps.find((lap) => lap.id === lapParam) ?? comparableLaps[0];
+  const { bestLap, comparableLaps, selectedLap } = comparison;
 
   const bestTelemetry = generateLapTelemetry(session, bestLap);
   const selectedTelemetry = generateLapTelemetry(session, selectedLap);

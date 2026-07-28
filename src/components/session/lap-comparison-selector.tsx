@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { formatLapTime } from "@/lib/format";
 import type { LapSummary } from "@/types/lap";
 
@@ -12,6 +12,7 @@ interface LapComparisonSelectorProps {
 export function LapComparisonSelector({ laps, selectedLapId }: LapComparisonSelectorProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   return (
     <div className="flex items-center gap-2">
@@ -21,7 +22,11 @@ export function LapComparisonSelector({ laps, selectedLapId }: LapComparisonSele
       <select
         id="compare-lap"
         value={selectedLapId}
-        onChange={(event) => router.push(`${pathname}?lap=${event.target.value}`)}
+        onChange={(event) => {
+          const params = new URLSearchParams(searchParams);
+          params.set("lap", event.target.value);
+          router.replace(`${pathname}?${params.toString()}`);
+        }}
         className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         {laps.map((lap) => (
