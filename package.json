@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "review:local": "scrutineer review --diff origin/main --provider ollama",
     "review:pr": "scrutineer review --diff origin/main --pr",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -46,6 +47,7 @@
     "jsdom": "^29.1.1",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.1",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }
