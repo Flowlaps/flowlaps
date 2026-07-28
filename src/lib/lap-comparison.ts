@@ -84,7 +84,14 @@ export function buildComparisonSummary(
   SECTOR_LABELS.forEach((sectorLabel, sector) => {
     const start = sector * sectorSize;
     const end = Math.min(series.length, start + sectorSize);
-    if (end - start < 2) return;
+    if (end - start < 2) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(
+          `buildComparisonSummary: ${sectorLabel} has too few points (${end - start}) to form a segment — dropping its callout. This shouldn't happen against generateLapTelemetry's dense, fixed-step samples; check the telemetry source's sampling density if you're seeing this.`,
+        );
+      }
+      return;
+    }
 
     let bestTimeMs = 0;
     let selectedTimeMs = 0;
