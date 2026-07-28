@@ -64,6 +64,14 @@ function segmentTimeMs(speedKphA: number, speedKphB: number, distanceStepM: numb
 // Splits the lap into 3 broad distance sectors (not corner-by-corner) and
 // estimates real time lost per sector via t = d/v, so callouts stay grounded
 // in the data without pretending to know an exact braking point.
+//
+// Assumes both series share the same fixed distance grid mock-telemetry
+// generates (constant SAMPLE_STEP_M): the `end - start < 2` guard just skips
+// a sector with too few points to form a segment, which can't happen against
+// today's dense, evenly-spaced mock samples. A real telemetry source with
+// sparser or uneven sampling could hit that guard and silently drop a
+// sector's callout — revisit this if/when this stops being fed exclusively
+// by generateLapTelemetry.
 export function buildComparisonSummary(
   series: ComparisonPoint[],
   bestLap: LapSummary,
@@ -76,7 +84,14 @@ export function buildComparisonSummary(
   SECTOR_LABELS.forEach((sectorLabel, sector) => {
     const start = sector * sectorSize;
     const end = Math.min(series.length, start + sectorSize);
-    if (end - start < 2) return;
+    if (end - start < 2) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(
+          `buildComparisonSummary: ${sectorLabel} has too few points (${end - start}) to form a segment — dropping its callout. This shouldn't happen against generateLapTelemetry's dense, fixed-step samples; check the telemetry source's sampling density if you're seeing this.`,
+        );
+      }
+      return;
+    }
 
     let bestTimeMs = 0;
     let selectedTimeMs = 0;

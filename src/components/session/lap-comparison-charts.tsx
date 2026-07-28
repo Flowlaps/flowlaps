@@ -11,47 +11,13 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CHARTS, formatDistance } from "@/lib/comparison-chart-config";
 import type { ComparisonPoint } from "@/lib/lap-comparison";
 
 interface LapComparisonChartsProps {
   series: ComparisonPoint[];
   selectedLapNumber: number;
 }
-
-interface ChartSpec {
-  title: string;
-  description: string;
-  bestKey: keyof ComparisonPoint;
-  selectedKey: keyof ComparisonPoint;
-  unit: string;
-  domain?: [number, number];
-}
-
-const CHARTS: ChartSpec[] = [
-  {
-    title: "Speed",
-    description: "Speed through the lap",
-    bestKey: "bestSpeedKph",
-    selectedKey: "selectedSpeedKph",
-    unit: "kph",
-  },
-  {
-    title: "Brake",
-    description: "Brake input through the lap",
-    bestKey: "bestBrakePct",
-    selectedKey: "selectedBrakePct",
-    unit: "%",
-    domain: [0, 100],
-  },
-  {
-    title: "Throttle",
-    description: "Throttle input through the lap",
-    bestKey: "bestThrottlePct",
-    selectedKey: "selectedThrottlePct",
-    unit: "%",
-    domain: [0, 100],
-  },
-];
 
 export function LapComparisonCharts({ series, selectedLapNumber }: LapComparisonChartsProps) {
   return (
@@ -73,14 +39,14 @@ export function LapComparisonCharts({ series, selectedLapNumber }: LapComparison
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis
                     dataKey="distanceMeters"
-                    tickFormatter={(value: number) => `${value}m`}
+                    tickFormatter={formatDistance}
                     stroke="var(--muted-foreground)"
                     fontSize={12}
                   />
                   <YAxis domain={chart.domain} stroke="var(--muted-foreground)" fontSize={12} />
                   <Tooltip
-                    formatter={(value) => `${Math.round(Number(value))} ${chart.unit}`}
-                    labelFormatter={(value) => `${Math.round(Number(value))}m`}
+                    formatter={chart.formatValue}
+                    labelFormatter={formatDistance}
                     contentStyle={{
                       backgroundColor: "var(--card)",
                       borderColor: "var(--border)",
