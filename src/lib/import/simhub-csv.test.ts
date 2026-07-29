@@ -148,13 +148,44 @@ describe("normalizeSimHubCsv", () => {
     expect(session.laps[0].telemetryPoints.map((point) => point.gear)).toEqual([0, -1]);
   });
 
-  it("throws when required columns are missing", () => {
+  it("throws and names every missing column when several are absent", () => {
     const csv = "Gear,Throttle\n3,100";
-    expect(() => normalizeSimHubCsv(csv)).toThrow(/missing required columns/i);
+    expect(() => normalizeSimHubCsv(csv)).toThrow(
+      "CSV is missing required columns: Brake, Rpms, SpeedKmh, CurrentLap, CompletedLaps, CurrentLapTime, LastLapTime, Sector1LastLapTime, Sector2LastLapTime, Sector3LastLapTime, SessionOdo",
+    );
   });
 
   it("throws when no lap ever completes", () => {
     const csv = [HEADER, row({ completedLaps: "0", currentLapTime: "0:00.000", odo: "0" })].join("\n");
     expect(() => normalizeSimHubCsv(csv)).toThrow(/no complete laps/i);
+  });
+
+  it("throws when the file is entirely empty", () => {
+    expect(() => normalizeSimHubCsv("")).toThrow(/no content/i);
+  });
+
+  it("throws when the file is only whitespace", () => {
+    expect(() => normalizeSimHubCsv("   \n\n  ")).toThrow(/no content/i);
+  });
+
+  it("records a row error for an unparseable value in a non-numeric-looking column", () => {
+    const csv = [
+      HEADER,
+      row({ gear: "X", completedLaps: "0", currentLapTime: "0:00.000", odo: "0" }),
+      row({ completedLaps: "0", currentLapTime: "0:01.000", odo: "50" }),
+      row({
+        completedLaps: "1",
+        currentLapTime: "0:00.000",
+        lastLapTime: "0:45.000",
+        sector1: "0:15.000",
+        sector2: "0:15.000",
+        sector3: "0:15.000",
+        odo: "100",
+      }),
+    ].join("\n");
+
+    const { session, rowErrors } = normalizeSimHubCsv(csv);
+    expect(rowErrors).toEqual([{ row: 2, message: 'Could not parse "Gear" value.' }]);
+    expect(session.laps[0].telemetryPoints).toHaveLength(1);
   });
 });
