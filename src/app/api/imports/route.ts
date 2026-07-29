@@ -11,6 +11,20 @@ const UNEXPECTED_ERROR_MESSAGE =
   "Something went wrong while uploading the file. Please try again.";
 const UNPARSEABLE_CSV_MESSAGE = "Could not parse this CSV file.";
 
+// Best-effort: if marking the import failed also fails (e.g. a DB blip),
+// log it and let the caller's original error response go out anyway rather
+// than letting this secondary failure crash the request.
+async function markImportFailed(importId: string, errorMessage: string) {
+  try {
+    await prisma.import.update({
+      where: { id: importId },
+      data: { status: "failed", errorMessage },
+    });
+  } catch (error) {
+    console.error(`POST /api/imports: failed to mark import ${importId} as failed`, error);
+  }
+}
+
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const file = formData.get("file");
@@ -67,26 +81,28 @@ export async function POST(request: NextRequest) {
     normalized = normalizeSimHubCsv(parsedFile.data.rawContent);
   } catch (error) {
     const message = error instanceof Error ? error.message : UNPARSEABLE_CSV_MESSAGE;
-    await prisma.import.update({
-      where: { id: importRecord.id },
-      data: { status: "failed", errorMessage: message },
-    });
+    await markImportFailed(importRecord.id, message);
     return NextResponse.json({ error: message, importId: importRecord.id }, { status: 400 });
   }
 
   try {
-    const driver = await getOrCreateDefaultDriver(prisma);
-    const sessionInput = buildSessionCreateInput(
-      driver.id,
-      parsedMetadata.data,
-      normalized.session,
-      parsedFile.data.filename,
-    );
-    const session = await prisma.session.create({ data: sessionInput });
-
-    await prisma.import.update({
-      where: { id: importRecord.id },
-      data: { status: "parsed", sessionId: session.id },
+    // Transactional: if marking the import "parsed" fails after the session
+    // was created, the session create rolls back too, rather than leaving an
+    // orphaned Session that nothing points to.
+    const session = await prisma.$transaction(async (tx) => {
+      const driver = await getOrCreateDefaultDriver(tx);
+      const sessionInput = buildSessionCreateInput(
+        driver.id,
+        parsedMetadata.data,
+        normalized.session,
+        parsedFile.data.filename,
+      );
+      const created = await tx.session.create({ data: sessionInput });
+      await tx.import.update({
+        where: { id: importRecord.id },
+        data: { status: "parsed", sessionId: created.id },
+      });
+      return created;
     });
 
     return NextResponse.json(
@@ -100,10 +116,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("POST /api/imports: failed to create session from normalized data", error);
-    await prisma.import.update({
-      where: { id: importRecord.id },
-      data: { status: "failed", errorMessage: UNEXPECTED_ERROR_MESSAGE },
-    });
+    await markImportFailed(importRecord.id, UNEXPECTED_ERROR_MESSAGE);
     return NextResponse.json(
       { error: UNEXPECTED_ERROR_MESSAGE, importId: importRecord.id },
       { status: 500 },

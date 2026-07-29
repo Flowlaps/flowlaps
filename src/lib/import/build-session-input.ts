@@ -10,8 +10,8 @@ export function buildSessionCreateInput(
   metadata: ImportSessionMetadataInput,
   session: NormalizedSession,
   sourceFilename: string,
+  startedAt: Date = new Date(),
 ): Prisma.SessionCreateInput {
-  const startedAt = new Date();
   const totalLapMs = session.laps.reduce((sum, lap) => sum + lap.lapTimeMs, 0);
   const endedAt = new Date(startedAt.getTime() + totalLapMs);
 

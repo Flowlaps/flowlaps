@@ -66,6 +66,20 @@ describe("buildSessionCreateInput", () => {
     expect(endedAt.getTime() - startedAt.getTime()).toBe(90_500);
   });
 
+  it("accepts an explicit startedAt for deterministic tests", () => {
+    const fixedStart = new Date("2026-07-29T12:00:00.000Z");
+    const input = buildSessionCreateInput(
+      "driver-1",
+      metadata,
+      normalizedSession,
+      "session.csv",
+      fixedStart,
+    );
+
+    expect(input.startedAt).toBe(fixedStart);
+    expect((input.endedAt as Date).toISOString()).toBe("2026-07-29T12:01:30.500Z");
+  });
+
   it("carries every lap's telemetry points through unchanged", () => {
     const input = buildSessionCreateInput("driver-1", metadata, normalizedSession, "session.csv");
 

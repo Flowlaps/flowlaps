@@ -9,8 +9,8 @@ import { NextRequest } from "next/server";
 import { POST } from "./route";
 import { prisma } from "@/lib/prisma";
 
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
+vi.mock("@/lib/prisma", () => {
+  const client = {
     import: {
       create: vi.fn(),
       update: vi.fn(),
@@ -22,8 +22,16 @@ vi.mock("@/lib/prisma", () => ({
     session: {
       create: vi.fn(),
     },
-  },
-}));
+  };
+  return {
+    prisma: {
+      ...client,
+      // Tests don't exercise real transactional isolation/rollback - the
+      // callback just runs against the same mocked client.
+      $transaction: vi.fn((callback: (tx: typeof client) => unknown) => callback(client)),
+    },
+  };
+});
 
 const mockedImportCreate = vi.mocked(prisma.import.create);
 const mockedImportUpdate = vi.mocked(prisma.import.update);
@@ -226,6 +234,36 @@ describe("POST /api/imports", () => {
       where: { id: "import-3" },
       data: { status: "failed", errorMessage: expect.stringMatching(/went wrong/i) },
     });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("still returns the parse error if marking the import failed also fails", async () => {
+    const createdAt = new Date("2026-07-29T12:00:00.000Z");
+    mockedImportCreate.mockResolvedValue({
+      id: "import-4",
+      filename: "session.csv",
+      fileSizeBytes: unparseableCsv.length,
+      rawContent: unparseableCsv,
+      status: "uploaded",
+      errorMessage: null,
+      createdAt,
+      sessionId: null,
+    });
+    mockedImportUpdate.mockRejectedValue(new Error("connection refused"));
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const file = new File([unparseableCsv], "session.csv", { type: "text/csv" });
+    const response = await POST(requestWithForm({ file, ...validMetadata }));
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toMatch(/missing required columns/i);
+    expect(body.importId).toBe("import-4");
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("failed to mark import import-4 as failed"),
+      expect.any(Error),
+    );
 
     consoleErrorSpy.mockRestore();
   });
