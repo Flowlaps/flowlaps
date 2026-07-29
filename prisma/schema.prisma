@@ -40,6 +40,8 @@ model Import {
   status        ImportStatus @default(uploaded)
   errorMessage  String?
   createdAt     DateTime     @default(now())
+  sessionId     String?      @unique
+  session       Session?     @relation(fields: [sessionId], references: [id])
 
   @@index([status])
 }
@@ -95,6 +97,7 @@ model Session {
   updatedAt       DateTime         @updatedAt
   laps            Lap[]
   coachingReports CoachingReport[]
+  import          Import?
 
   @@index([driverId])
   @@index([trackId])
