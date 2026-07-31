@@ -31,13 +31,8 @@ describe("SessionHeader", () => {
     );
   });
 
-  it("shows the compare laps link by default", () => {
+  it("shows the compare laps link", () => {
     render(<SessionHeader session={session} />);
     expect(screen.getByText("Compare laps")).toBeInTheDocument();
-  });
-
-  it("hides the compare laps link when hideCompareLink is set", () => {
-    render(<SessionHeader session={session} hideCompareLink />);
-    expect(screen.queryByText("Compare laps")).not.toBeInTheDocument();
   });
 });

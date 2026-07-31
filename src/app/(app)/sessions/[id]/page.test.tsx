@@ -66,12 +66,12 @@ describe("SessionPage", () => {
     expect(screen.getByText(/GT3 - Porsche 992/)).toBeInTheDocument();
   });
 
-  it("hides the compare-laps link (comparison isn't wired to real data yet)", async () => {
+  it("shows the compare-laps link", async () => {
     mockedFindUnique.mockResolvedValue(session as never);
 
     render(await SessionPage({ params: Promise.resolve({ id: "session-1" }) }));
 
-    expect(screen.queryByText("Compare laps")).not.toBeInTheDocument();
+    expect(screen.getByText("Compare laps")).toBeInTheDocument();
   });
 
   it("throws notFound when the session doesn't exist", async () => {

@@ -11,30 +11,105 @@ export interface ComparisonPoint {
   selectedThrottlePct: number;
 }
 
-// Both telemetry series are sampled on the same fixed distance grid, so they
-// can be zipped by index without needing to interpolate.
+// Matches mock-telemetry.ts's own fixed sample spacing (not imported from
+// there - this module shouldn't depend on the mock generator, they just
+// happen to agree). Resampling a mock lap onto a grid at this same step is a
+// no-op (every grid distance lands exactly on one of the lap's own samples,
+// so interpolation collapses to t=0), which is what lap-comparison.test.ts's
+// regression case checks.
+const DISTANCE_GRID_STEP_M = 25;
+
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+// Builds the shared distance grid two laps get resampled onto: 0 up to
+// maxDistanceMeters (the shorter of the two laps' own last sample, decided by
+// the caller) at a fixed step, always including the exact endpoint even if it
+// doesn't land evenly on the step.
+function buildDistanceGrid(maxDistanceMeters: number, stepMeters: number): number[] {
+  if (maxDistanceMeters <= 0) return [0];
+
+  const grid: number[] = [];
+  for (let distance = 0; distance < maxDistanceMeters; distance += stepMeters) {
+    grid.push(distance);
+  }
+  grid.push(maxDistanceMeters);
+  return grid;
+}
+
+// Real per-lap telemetry (CSV import) is sampled at whatever time interval
+// the source logged at, so distanceMeters between samples varies with speed
+// and two different laps land on entirely different distances - unlike mock
+// data's fixed step, they can't be zipped by array index. This resamples one
+// lap's points onto an arbitrary shared distance grid via linear
+// interpolation between the two real samples bracketing each grid distance,
+// so any two laps (real or mock) end up on directly comparable series.
+//
+// Assumes points are already sorted ascending by distanceMeters (guaranteed
+// by querying/generating in sampleIndex order - a lap's distance only
+// increases over time) and that grid values fall within
+// [points[0].distanceMeters, points[last].distanceMeters]; buildComparisonSeries
+// guarantees the latter by building the grid from the two laps' own ranges.
+export function resampleToDistanceGrid(
+  points: TelemetryPoint[],
+  grid: number[],
+): TelemetryPoint[] {
+  if (points.length === 0) return [];
+
+  const lapId = points[0].lapId;
+  let cursor = 0;
+
+  return grid.map((distanceMeters) => {
+    while (cursor < points.length - 2 && points[cursor + 1].distanceMeters <= distanceMeters) {
+      cursor++;
+    }
+
+    const a = points[cursor];
+    const b = points[Math.min(cursor + 1, points.length - 1)];
+    const span = b.distanceMeters - a.distanceMeters;
+    const t = span > 0 ? clamp01((distanceMeters - a.distanceMeters) / span) : 0;
+
+    return {
+      lapId,
+      distanceMeters,
+      speedKph: lerp(a.speedKph, b.speedKph, t),
+      brakePct: lerp(a.brakePct, b.brakePct, t),
+      throttlePct: lerp(a.throttlePct, b.throttlePct, t),
+    };
+  });
+}
+
 export function buildComparisonSeries(
   bestLapTelemetry: TelemetryPoint[],
   selectedLapTelemetry: TelemetryPoint[],
 ): ComparisonPoint[] {
-  const length = Math.min(bestLapTelemetry.length, selectedLapTelemetry.length);
-  const points: ComparisonPoint[] = [];
-
-  for (let i = 0; i < length; i++) {
-    const best = bestLapTelemetry[i];
-    const selected = selectedLapTelemetry[i];
-    points.push({
-      distanceMeters: best.distanceMeters,
-      bestSpeedKph: best.speedKph,
-      selectedSpeedKph: selected.speedKph,
-      bestBrakePct: best.brakePct,
-      selectedBrakePct: selected.brakePct,
-      bestThrottlePct: best.throttlePct,
-      selectedThrottlePct: selected.throttlePct,
-    });
+  if (bestLapTelemetry.length === 0 || selectedLapTelemetry.length === 0) {
+    return [];
   }
 
-  return points;
+  const maxDistanceMeters = Math.min(
+    bestLapTelemetry[bestLapTelemetry.length - 1].distanceMeters,
+    selectedLapTelemetry[selectedLapTelemetry.length - 1].distanceMeters,
+  );
+
+  const grid = buildDistanceGrid(maxDistanceMeters, DISTANCE_GRID_STEP_M);
+  const best = resampleToDistanceGrid(bestLapTelemetry, grid);
+  const selected = resampleToDistanceGrid(selectedLapTelemetry, grid);
+
+  return grid.map((distanceMeters, index) => ({
+    distanceMeters,
+    bestSpeedKph: best[index].speedKph,
+    selectedSpeedKph: selected[index].speedKph,
+    bestBrakePct: best[index].brakePct,
+    selectedBrakePct: selected[index].brakePct,
+    bestThrottlePct: best[index].throttlePct,
+    selectedThrottlePct: selected[index].throttlePct,
+  }));
 }
 
 export interface ComparisonCallout {
@@ -65,13 +140,11 @@ function segmentTimeMs(speedKphA: number, speedKphB: number, distanceStepM: numb
 // estimates real time lost per sector via t = d/v, so callouts stay grounded
 // in the data without pretending to know an exact braking point.
 //
-// Assumes both series share the same fixed distance grid mock-telemetry
-// generates (constant SAMPLE_STEP_M): the `end - start < 2` guard just skips
-// a sector with too few points to form a segment, which can't happen against
-// today's dense, evenly-spaced mock samples. A real telemetry source with
-// sparser or uneven sampling could hit that guard and silently drop a
-// sector's callout — revisit this if/when this stops being fed exclusively
-// by generateLapTelemetry.
+// series is always evenly spaced on DISTANCE_GRID_STEP_M by this point -
+// buildComparisonSeries resamples both laps onto the same grid regardless of
+// how either was originally sampled, so the `end - start < 2` guard below is
+// just a defensive floor for a very short comparison range, not something
+// that depends on the telemetry source.
 export function buildComparisonSummary(
   series: ComparisonPoint[],
   bestLap: LapSummary,
