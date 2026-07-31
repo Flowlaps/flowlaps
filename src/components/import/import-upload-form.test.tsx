@@ -3,9 +3,15 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { ImportUploadForm } from "./import-upload-form";
 
 const mockedFetch = vi.fn();
+const push = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
+}));
 
 beforeEach(() => {
   mockedFetch.mockReset();
+  push.mockReset();
   vi.stubGlobal("fetch", mockedFetch);
 });
 
@@ -13,6 +19,15 @@ function selectFile(file: File) {
   fireEvent.change(screen.getByLabelText("Session CSV"), {
     target: { files: [file] },
   });
+}
+
+function fillMetadata() {
+  fireEvent.change(screen.getByLabelText("Sim"), { target: { value: "Assetto Corsa Competizione" } });
+  fireEvent.change(screen.getByLabelText("Track"), { target: { value: "Spa-Francorchamps" } });
+  fireEvent.change(screen.getByLabelText("Car class"), { target: { value: "GT3" } });
+  fireEvent.change(screen.getByLabelText("Car"), { target: { value: "Porsche 992" } });
+  fireEvent.click(screen.getByRole("combobox", { name: "Session type" }));
+  fireEvent.click(screen.getByRole("option", { name: "Practice" }));
 }
 
 const csvFile = new File(["lapNumber,timestampMs\n1,0\n"], "session.csv", {
@@ -31,20 +46,15 @@ describe("ImportUploadForm", () => {
     expect(mockedFetch).not.toHaveBeenCalled();
   });
 
-  it("uploads the selected file to /api/imports", async () => {
+  it("uploads the selected file and session metadata to /api/imports", async () => {
     mockedFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({
-        id: "import-1",
-        filename: "session.csv",
-        fileSizeBytes: csvFile.size,
-        status: "uploaded",
-        createdAt: "2026-07-28T12:00:00.000Z",
-      }),
+      json: async () => ({ importId: "import-1", sessionId: "session-1" }),
     });
 
     render(<ImportUploadForm />);
     selectFile(csvFile);
+    fillMetadata();
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Upload session" }));
@@ -54,7 +64,13 @@ describe("ImportUploadForm", () => {
     const [url, init] = mockedFetch.mock.calls[0];
     expect(url).toBe("/api/imports");
     expect(init.method).toBe("POST");
-    expect((init.body as FormData).get("file")).toBe(csvFile);
+    const body = init.body as FormData;
+    expect(body.get("file")).toBe(csvFile);
+    expect(body.get("sim")).toBe("Assetto Corsa Competizione");
+    expect(body.get("trackName")).toBe("Spa-Francorchamps");
+    expect(body.get("carClassName")).toBe("GT3");
+    expect(body.get("carName")).toBe("Porsche 992");
+    expect(body.get("sessionType")).toBe("practice");
   });
 
   it("disables the button and shows a pending label while uploading", async () => {
@@ -67,6 +83,7 @@ describe("ImportUploadForm", () => {
 
     render(<ImportUploadForm />);
     selectFile(csvFile);
+    fillMetadata();
     fireEvent.click(screen.getByRole("button", { name: "Upload session" }));
 
     const pendingButton = await screen.findByRole("button", {
@@ -75,43 +92,43 @@ describe("ImportUploadForm", () => {
     expect(pendingButton).toBeDisabled();
 
     await act(async () => {
-      resolveFetch({ ok: true, json: async () => ({ filename: "session.csv" }) });
+      resolveFetch({ ok: true, json: async () => ({ importId: "import-1" }) });
     });
   });
 
-  it("shows a calm confirmation on success", async () => {
+  it("redirects to the import result page on success", async () => {
     mockedFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ filename: "session.csv" }),
+      json: async () => ({ importId: "import-1", sessionId: "session-1" }),
     });
 
     render(<ImportUploadForm />);
     selectFile(csvFile);
+    fillMetadata();
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Upload session" }));
     });
 
-    const confirmation = await screen.findByRole("status");
-    expect(confirmation).toHaveTextContent("session.csv was uploaded.");
+    expect(push).toHaveBeenCalledWith("/imports/import-1");
   });
 
   it("shows the server's validation error message on a rejected upload", async () => {
     mockedFetch.mockResolvedValue({
       ok: false,
-      json: async () => ({ error: "Only .csv files are supported." }),
+      json: async () => ({ error: "Track is required." }),
     });
 
     render(<ImportUploadForm />);
     selectFile(csvFile);
+    fillMetadata();
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Upload session" }));
     });
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "Only .csv files are supported.",
-    );
+    expect(screen.getByRole("alert")).toHaveTextContent("Track is required.");
+    expect(push).not.toHaveBeenCalled();
   });
 
   it("shows a generic error message when the request fails outright", async () => {
@@ -119,6 +136,7 @@ describe("ImportUploadForm", () => {
 
     render(<ImportUploadForm />);
     selectFile(csvFile);
+    fillMetadata();
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Upload session" }));
