@@ -18,6 +18,7 @@ import type { SessionType } from "@/types/session";
 type UploadState = { status: "idle" } | { status: "uploading" } | { status: "error"; message: string };
 
 const NO_FILE_MESSAGE = "Choose a CSV file to import.";
+const MISSING_METADATA_MESSAGE = "Fill in the session details before uploading.";
 const UNEXPECTED_ERROR_MESSAGE =
   "Something went wrong while uploading the file. Please try again.";
 
@@ -45,6 +46,11 @@ export function ImportUploadForm() {
 
     if (!selectedFile) {
       setState({ status: "error", message: NO_FILE_MESSAGE });
+      return;
+    }
+
+    if (!sim.trim() || !trackName.trim() || !carClassName.trim() || !carName.trim() || !sessionType) {
+      setState({ status: "error", message: MISSING_METADATA_MESSAGE });
       return;
     }
 

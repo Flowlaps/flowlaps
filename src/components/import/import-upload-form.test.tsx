@@ -46,6 +46,18 @@ describe("ImportUploadForm", () => {
     expect(mockedFetch).not.toHaveBeenCalled();
   });
 
+  it("shows an error when submitting without filling in session details", () => {
+    render(<ImportUploadForm />);
+    selectFile(csvFile);
+
+    fireEvent.click(screen.getByRole("button", { name: "Upload session" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Fill in the session details before uploading.",
+    );
+    expect(mockedFetch).not.toHaveBeenCalled();
+  });
+
   it("uploads the selected file and session metadata to /api/imports", async () => {
     mockedFetch.mockResolvedValue({
       ok: true,
