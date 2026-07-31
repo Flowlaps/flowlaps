@@ -6,11 +6,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { LapComparisonSelector } from "@/components/session/lap-comparison-selector";
 import { LapComparisonCallouts } from "@/components/session/lap-comparison-callouts";
 import { LapComparisonCharts } from "@/components/session/lap-comparison-charts";
-import { mockSessions, mockLaps } from "@/lib/mock-data";
+import { prisma } from "@/lib/prisma";
+import { mapSessionToSummary, mapLapsToSummaries } from "@/lib/session-mapping";
 import { resolveLapComparison } from "@/lib/lap-analysis";
-import { generateLapTelemetry } from "@/lib/mock-telemetry";
 import { buildComparisonSeries, buildComparisonSummary } from "@/lib/lap-comparison";
 import { formatLapTime } from "@/lib/format";
+import type { TelemetryPoint } from "@/types/telemetry";
 
 interface ComparePageProps {
   params: Promise<{ id: string }>;
@@ -29,16 +30,39 @@ function BackToSessionLink({ sessionId }: { sessionId: string }) {
   );
 }
 
+// Only the two laps actually being compared need their per-sample telemetry
+// pulled - a session can have far more laps than that, so this stays scoped
+// to one lapId at a time rather than fetching every lap's samples up front.
+async function fetchLapTelemetry(lapId: string): Promise<TelemetryPoint[]> {
+  const points = await prisma.telemetryPoint.findMany({
+    where: { lapId },
+    orderBy: { sampleIndex: "asc" },
+  });
+
+  return points.map((point) => ({
+    lapId: point.lapId,
+    distanceMeters: point.distanceMeters,
+    speedKph: point.speedKph,
+    throttlePct: point.throttlePct,
+    brakePct: point.brakePct,
+  }));
+}
+
 export default async function ComparePage({ params, searchParams }: ComparePageProps) {
   const { id } = await params;
   const { lap: lapParam } = await searchParams;
-  const session = mockSessions.find((item) => item.id === id);
 
-  if (!session) {
+  const record = await prisma.session.findUnique({
+    where: { id },
+    include: { track: true, car: true, laps: true },
+  });
+
+  if (!record) {
     notFound();
   }
 
-  const laps = mockLaps[session.id] ?? [];
+  const session = mapSessionToSummary(record);
+  const laps = mapLapsToSummaries(record.laps);
   const comparison = resolveLapComparison(laps, lapParam);
 
   if (!comparison) {
@@ -60,11 +84,10 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
 
   const { bestLap, comparableLaps, selectedLap } = comparison;
 
-  // Cheap against mock data generated in-memory; once this reads real
-  // per-sample telemetry, generating both laps synchronously per request
-  // will need caching/streaming instead.
-  const bestTelemetry = generateLapTelemetry(session, bestLap);
-  const selectedTelemetry = generateLapTelemetry(session, selectedLap);
+  const [bestTelemetry, selectedTelemetry] = await Promise.all([
+    fetchLapTelemetry(bestLap.id),
+    fetchLapTelemetry(selectedLap.id),
+  ]);
   const series = buildComparisonSeries(bestTelemetry, selectedTelemetry);
   const summary = buildComparisonSummary(series, bestLap, selectedLap);
 

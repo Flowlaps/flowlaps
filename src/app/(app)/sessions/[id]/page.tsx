@@ -28,10 +28,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-10">
-      {/* Lap comparison still only reads mock data (Ticket 8 wires it up
-          next), so every session hides the link rather than pointing at a
-          route that can't find a real session by id yet. */}
-      <SessionHeader session={session} hideCompareLink />
+      <SessionHeader session={session} />
       <SessionKpis session={session} theoreticalBestMs={bestSectors?.theoreticalBestMs} />
       <LapTable laps={laps} bestSectors={bestSectors} />
     </main>

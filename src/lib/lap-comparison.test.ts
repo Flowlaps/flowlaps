@@ -1,8 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { buildComparisonSeries, buildComparisonSummary } from "./lap-comparison";
+import { buildComparisonSeries, buildComparisonSummary, resampleToDistanceGrid } from "./lap-comparison";
 import { generateLapTelemetry } from "./mock-telemetry";
 import type { SessionSummary } from "@/types/session";
 import type { LapSummary } from "@/types/lap";
+import type { TelemetryPoint } from "@/types/telemetry";
+
+function point(overrides: Partial<TelemetryPoint>): TelemetryPoint {
+  return {
+    lapId: "lap-1",
+    distanceMeters: 0,
+    speedKph: 0,
+    throttlePct: 0,
+    brakePct: 0,
+    ...overrides,
+  };
+}
 
 function buildSession(overrides: Partial<SessionSummary> = {}): SessionSummary {
   return {
@@ -33,6 +45,47 @@ function buildLap(overrides: Partial<LapSummary> = {}): LapSummary {
   };
 }
 
+describe("resampleToDistanceGrid", () => {
+  it("returns exact sample values when the grid lands on real distances (mock data no-op case)", () => {
+    const session = buildSession();
+    const lap = buildLap();
+    const telemetry = generateLapTelemetry(session, lap);
+    const nativeGrid = telemetry.map((p) => p.distanceMeters);
+
+    const resampled = resampleToDistanceGrid(telemetry, nativeGrid);
+
+    expect(resampled).toEqual(telemetry);
+  });
+
+  it("linearly interpolates between the two real samples bracketing a grid distance", () => {
+    const points: TelemetryPoint[] = [
+      point({ distanceMeters: 0, speedKph: 100, brakePct: 0, throttlePct: 100 }),
+      point({ distanceMeters: 40, speedKph: 60, brakePct: 80, throttlePct: 0 }),
+    ];
+
+    const resampled = resampleToDistanceGrid(points, [0, 10, 40]);
+
+    expect(resampled[1].distanceMeters).toBe(10);
+    // 10 is 25% of the way from 0 to 40 -> 25% of the way from each field's start to end value.
+    expect(resampled[1].speedKph).toBeCloseTo(90, 5);
+    expect(resampled[1].brakePct).toBeCloseTo(20, 5);
+    expect(resampled[1].throttlePct).toBeCloseTo(75, 5);
+    expect(resampled[2]).toEqual(points[1]);
+  });
+
+  it("holds the single sample's value across the whole grid for a one-point lap", () => {
+    const points: TelemetryPoint[] = [point({ distanceMeters: 0, speedKph: 150 })];
+
+    const resampled = resampleToDistanceGrid(points, [0, 5, 10]);
+
+    expect(resampled.every((p) => p.speedKph === 150)).toBe(true);
+  });
+
+  it("returns an empty array for a lap with no telemetry", () => {
+    expect(resampleToDistanceGrid([], [0, 10])).toEqual([]);
+  });
+});
+
 describe("buildComparisonSeries", () => {
   it("zips two telemetry series by matching distance", () => {
     const session = buildSession();
@@ -48,6 +101,43 @@ describe("buildComparisonSeries", () => {
     expect(series[0].distanceMeters).toBe(0);
     expect(series.every((point) => Number.isFinite(point.bestSpeedKph))).toBe(true);
     expect(series.every((point) => Number.isFinite(point.selectedSpeedKph))).toBe(true);
+  });
+
+  it("aligns two laps with different sample counts and uneven, non-matching distance steps (real CSV import shape)", () => {
+    // Best lap: fewer, unevenly-spaced samples (as if logged at a lower rate).
+    const bestLapTelemetry: TelemetryPoint[] = [
+      point({ lapId: "best", distanceMeters: 0, speedKph: 80 }),
+      point({ lapId: "best", distanceMeters: 33, speedKph: 120 }),
+      point({ lapId: "best", distanceMeters: 91, speedKph: 200 }),
+      point({ lapId: "best", distanceMeters: 150, speedKph: 180 }),
+    ];
+    // Selected lap: more, differently-spaced samples, and a shorter total
+    // distance covered - buildComparisonSeries should clip to the shorter one.
+    const selectedLapTelemetry: TelemetryPoint[] = [
+      point({ lapId: "selected", distanceMeters: 0, speedKph: 75 }),
+      point({ lapId: "selected", distanceMeters: 18, speedKph: 95 }),
+      point({ lapId: "selected", distanceMeters: 47, speedKph: 140 }),
+      point({ lapId: "selected", distanceMeters: 72, speedKph: 175 }),
+      point({ lapId: "selected", distanceMeters: 110, speedKph: 190 }),
+    ];
+
+    const series = buildComparisonSeries(bestLapTelemetry, selectedLapTelemetry);
+
+    expect(series.length).toBeGreaterThan(1);
+    expect(series[0].distanceMeters).toBe(0);
+    expect(series[series.length - 1].distanceMeters).toBe(110);
+    // Every point must come from a real distance covered by both laps -
+    // the whole point of resampling is that these never desync.
+    for (const p of series) {
+      expect(p.distanceMeters).toBeLessThanOrEqual(110);
+      expect(Number.isFinite(p.bestSpeedKph)).toBe(true);
+      expect(Number.isFinite(p.selectedSpeedKph)).toBe(true);
+    }
+  });
+
+  it("returns an empty series when either lap has no telemetry", () => {
+    expect(buildComparisonSeries([], [point({})])).toEqual([]);
+    expect(buildComparisonSeries([point({})], [])).toEqual([]);
   });
 });
 

@@ -7,12 +7,9 @@ import type { SessionSummary } from "@/types/session";
 
 interface SessionHeaderProps {
   session: SessionSummary;
-  // Lap comparison only reads from mock data today, so imported sessions
-  // (Ticket 7) hide this link rather than point at a page that can't find them.
-  hideCompareLink?: boolean;
 }
 
-export function SessionHeader({ session, hideCompareLink = false }: SessionHeaderProps) {
+export function SessionHeader({ session }: SessionHeaderProps) {
   return (
     <div className="flex flex-col gap-4">
       <Link
@@ -32,14 +29,12 @@ export function SessionHeader({ session, hideCompareLink = false }: SessionHeade
             {session.carName} · {formatRelativeDate(session.startedAt)}
           </p>
         </div>
-        {hideCompareLink ? null : (
-          <Link
-            href={`/sessions/${session.id}/compare`}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            Compare laps
-          </Link>
-        )}
+        <Link
+          href={`/sessions/${session.id}/compare`}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          Compare laps
+        </Link>
       </div>
     </div>
   );
