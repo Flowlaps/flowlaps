@@ -4,7 +4,7 @@ import { importUploadSchema } from "@/lib/validation/import";
 import { importSessionMetadataSchema } from "@/lib/validation/import-session";
 import { normalizeSimHubCsv } from "@/lib/import/simhub-csv";
 import { buildSessionCreateInput } from "@/lib/import/build-session-input";
-import { getOrCreateDefaultDriver } from "@/lib/import/default-driver";
+import { getOrCreateDefaultDriver } from "@/lib/default-driver";
 
 const NO_FILE_MESSAGE = "No CSV file was provided.";
 const UNEXPECTED_ERROR_MESSAGE =

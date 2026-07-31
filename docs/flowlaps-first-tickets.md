@@ -66,7 +66,23 @@ Acceptance criteria:
 - Invalid rows are surfaced with useful errors.
 - Normalized session data can be viewed in the app.
 
-## Ticket 8: Build derived insight engine
+## Ticket 8: Wire real session data into dashboard, detail, and comparison
+
+Ticket 7 satisfied its own acceptance criteria via a dedicated `/imports/[id]`
+view, but `/dashboard`, `/sessions/[id]`, and `/sessions/[id]/compare` are
+still 100% hardcoded to mock data (the intended state per Tickets 2-4's own
+"uses mock data" acceptance criteria) - so an uploaded session never shows up
+in the dashboard's Recent Sessions list. This ticket points those three
+surfaces at Prisma instead, using the same seeded dataset (Ticket 5) that
+already mirrors the mock data. Split into 3 PRs along the dashboard / detail /
+comparison seam.
+
+Acceptance criteria:
+- Dashboard's Recent Sessions, KPI summary, and coaching report cards read from Prisma.
+- Session detail view reads from Prisma; `/imports/[id]`'s success path is retired in favor of redirecting straight to `/sessions/[id]` (it keeps handling the failed-import case only).
+- Lap comparison reads real per-lap telemetry, correctly aligning two laps with different sample counts/spacing rather than assuming a fixed shared grid.
+
+## Ticket 9: Build derived insight engine
 
 Implement pure TypeScript functions to compute derived telemetry insights.
 
@@ -76,7 +92,7 @@ Acceptance criteria:
 - Computes braking and throttle timing signals.
 - Produces structured DerivedInsight objects.
 
-## Ticket 9: Generate coaching report
+## Ticket 10: Generate coaching report
 
 Create a backend service that converts derived insights into a calm coaching report.
 
@@ -85,7 +101,7 @@ Acceptance criteria:
 - Report limits focus areas.
 - Report includes a short next-practice plan.
 
-## Ticket 10: Add history view
+## Ticket 11: Add history view
 
 Create a history page for past reports and focus areas.
 

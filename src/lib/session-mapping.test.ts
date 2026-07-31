@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { mapSessionToSummary, mapLapsToSummaries, type SessionWithTrackCarLaps } from "./map-session-for-view";
+import {
+  mapSessionToSummary,
+  mapLapsToSummaries,
+  mapCoachingReportToSummary,
+  type SessionWithTrackCarLaps,
+  type CoachingReportWithFocusAreas,
+} from "./session-mapping";
 
 const session: SessionWithTrackCarLaps = {
   id: "session-1",
@@ -91,6 +97,59 @@ describe("mapLapsToSummaries", () => {
       sector1Ms: 30_100,
       sector2Ms: 30_200,
       sector3Ms: 30_200,
+    });
+  });
+});
+
+const report: CoachingReportWithFocusAreas = {
+  id: "report-1",
+  sessionId: "session-1",
+  summary: "You are braking too early overall in the heaviest braking zones.",
+  paceNotes: null,
+  brakingNotes: null,
+  throttleNotes: null,
+  consistencyNotes: null,
+  nextPracticePlan: "Run 5 laps focused only on braking point at Les Combes\nNote how each lap feels rather than chasing lap time",
+  createdAt: new Date("2026-07-29T12:40:00.000Z"),
+  focusAreas: [
+    {
+      id: "focus-2",
+      reportId: "report-1",
+      category: "braking",
+      title: "Smooth throttle pickup on exit of Pouhon",
+      description: "Smooth throttle pickup on exit of Pouhon",
+      priority: 2,
+      createdAt: new Date(),
+    },
+    {
+      id: "focus-1",
+      reportId: "report-1",
+      category: "braking",
+      title: "Delay braking into Les Combes and Bus Stop",
+      description: "Delay braking into Les Combes and Bus Stop",
+      priority: 1,
+      createdAt: new Date(),
+    },
+  ],
+};
+
+describe("mapCoachingReportToSummary", () => {
+  it("splits nextPracticePlan into steps and orders focusAreas by priority", () => {
+    const summary = mapCoachingReportToSummary(report);
+
+    expect(summary).toEqual({
+      id: "report-1",
+      sessionId: "session-1",
+      createdAt: "2026-07-29T12:40:00.000Z",
+      summary: "You are braking too early overall in the heaviest braking zones.",
+      focusAreas: [
+        "Delay braking into Les Combes and Bus Stop",
+        "Smooth throttle pickup on exit of Pouhon",
+      ],
+      practicePlan: [
+        "Run 5 laps focused only on braking point at Les Combes",
+        "Note how each lap feels rather than chasing lap time",
+      ],
     });
   });
 });
