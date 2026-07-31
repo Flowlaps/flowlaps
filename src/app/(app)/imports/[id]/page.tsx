@@ -1,11 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { mapSessionToSummary, mapLapsToSummaries } from "@/lib/session-mapping";
-import { getTheoreticalBestSectors } from "@/lib/lap-analysis";
-import { SessionHeader } from "@/components/session/session-header";
-import { SessionKpis } from "@/components/session/session-kpis";
-import { LapTable } from "@/components/session/lap-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -29,43 +24,35 @@ function ImportFailedCard({ message }: { message: string }) {
   );
 }
 
+// The upload form redirects straight to /sessions/[id] on success, so this
+// route is normally only reached for a failed import (surfacing the parse
+// error) or a stale/bookmarked link. A parsed import found here still sends
+// the visitor on to the real session view rather than 404ing or re-rendering
+// a second copy of it.
 export default async function ImportResultPage({ params }: ImportResultPageProps) {
   const { id } = await params;
 
   const importRecord = await prisma.import.findUnique({
     where: { id },
-    include: { session: { include: { track: true, car: true, laps: true } } },
+    select: { status: true, errorMessage: true, sessionId: true },
   });
 
   if (!importRecord) {
     notFound();
   }
 
-  if (importRecord.status === "failed") {
-    return (
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-10">
-        <ImportFailedCard message={importRecord.errorMessage ?? GENERIC_ERROR_MESSAGE} />
-      </main>
-    );
+  if (importRecord.status === "parsed" && importRecord.sessionId) {
+    redirect(`/sessions/${importRecord.sessionId}`);
   }
 
-  if (importRecord.status !== "parsed" || !importRecord.session) {
-    return (
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-10">
-        <ImportFailedCard message={GENERIC_ERROR_MESSAGE} />
-      </main>
-    );
-  }
-
-  const session = mapSessionToSummary(importRecord.session);
-  const laps = mapLapsToSummaries(importRecord.session.laps);
-  const bestSectors = getTheoreticalBestSectors(laps);
+  const message =
+    importRecord.status === "failed"
+      ? (importRecord.errorMessage ?? GENERIC_ERROR_MESSAGE)
+      : GENERIC_ERROR_MESSAGE;
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-10">
-      <SessionHeader session={session} hideCompareLink />
-      <SessionKpis session={session} theoreticalBestMs={bestSectors?.theoreticalBestMs} />
-      <LapTable laps={laps} bestSectors={bestSectors} />
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-10">
+      <ImportFailedCard message={message} />
     </main>
   );
 }
