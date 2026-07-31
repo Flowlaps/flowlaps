@@ -76,7 +76,7 @@ export function ImportUploadForm() {
         return;
       }
 
-      router.push(`/imports/${body.importId}`);
+      router.push(`/sessions/${body.sessionId}`);
     } catch (error) {
       console.error("ImportUploadForm: failed to upload file", error);
       setState({ status: "error", message: UNEXPECTED_ERROR_MESSAGE });

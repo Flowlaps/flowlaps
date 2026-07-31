@@ -104,11 +104,11 @@ describe("ImportUploadForm", () => {
     expect(pendingButton).toBeDisabled();
 
     await act(async () => {
-      resolveFetch({ ok: true, json: async () => ({ importId: "import-1" }) });
+      resolveFetch({ ok: true, json: async () => ({ importId: "import-1", sessionId: "session-1" }) });
     });
   });
 
-  it("redirects to the import result page on success", async () => {
+  it("redirects to the session detail page on success", async () => {
     mockedFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ importId: "import-1", sessionId: "session-1" }),
@@ -122,7 +122,7 @@ describe("ImportUploadForm", () => {
       fireEvent.click(screen.getByRole("button", { name: "Upload session" }));
     });
 
-    expect(push).toHaveBeenCalledWith("/imports/import-1");
+    expect(push).toHaveBeenCalledWith("/sessions/session-1");
   });
 
   it("shows the server's validation error message on a rejected upload", async () => {
