@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { mapSessionToSummary, mapLapsToSummaries } from "@/lib/import/map-session-for-view";
+import { mapSessionToSummary, mapLapsToSummaries } from "@/lib/session-mapping";
 import { getTheoreticalBestSectors } from "@/lib/lap-analysis";
 import { SessionHeader } from "@/components/session/session-header";
 import { SessionKpis } from "@/components/session/session-kpis";

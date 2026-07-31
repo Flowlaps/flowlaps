@@ -15,3 +15,12 @@ export async function getOrCreateDefaultDriver(
     data: { displayName: DEFAULT_DRIVER_NAME, preferredSims: [] },
   });
 }
+
+// Read-only counterpart for page renders: a GET shouldn't have the side
+// effect of inserting a Driver row. Callers treat a null result as "no data
+// yet" (empty state / not found) rather than provisioning one on the spot.
+export async function getDefaultDriver(
+  client: Pick<PrismaClient, "driver">,
+): Promise<Driver | null> {
+  return client.driver.findFirst();
+}
