@@ -97,6 +97,21 @@ export const mockCoachingReports: CoachingReportSummary[] = [
       "Run a few laps focused purely on a consistent final sector",
     ],
   },
+  {
+    id: "report-4",
+    sessionId: "session-4",
+    createdAt: "2026-07-03T21:35:00.000Z",
+    summary:
+      "Your pace is already consistent lap to lap, so on a short qualifying run the time left is in fully committing on one attempt rather than smoothing out variance.",
+    focusAreas: [
+      "Send it into Prima Variante on your push lap instead of easing in",
+      "Carry more speed through Ascari rather than protecting the exit",
+    ],
+    practicePlan: [
+      "Run 3 single-lap attempts with a cool-down lap between each",
+      "Treat every lap like a qualifying attempt, not a long-run average",
+    ],
+  },
 ];
 
 // Generates believable per-lap sector splits for a session: one lap hits the
