@@ -42,3 +42,7 @@ next-env.d.ts
 
 # claude session memory
 .claude/memory/
+
+# ux-audit generated screenshots and reports
+/src/tools/ux-audit/output/
+/src/reports/
