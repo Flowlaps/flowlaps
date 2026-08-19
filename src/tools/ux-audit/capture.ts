@@ -19,8 +19,19 @@ async function getPage(): Promise<Page> {
 }
 
 async function gotoRoute(route: string): Promise<Page> {
+  const target = new URL(route, BASE_URL);
+  // `new URL(route, BASE_URL)` resolves an absolute URL in `route` (e.g.
+  // "https://evil.example") to itself, ignoring BASE_URL entirely — this
+  // tool should only ever navigate within the local dev server it's told
+  // to audit.
+  if (target.origin !== new URL(BASE_URL).origin) {
+    throw new Error(
+      `Route must be a path on ${BASE_URL}, not an absolute URL to a different origin: ${route}`,
+    );
+  }
+
   const p = await getPage();
-  await p.goto(new URL(route, BASE_URL).toString(), { waitUntil: "networkidle" });
+  await p.goto(target.toString(), { waitUntil: "networkidle" });
   return p;
 }
 
